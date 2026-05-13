@@ -13,14 +13,18 @@ export default function TabsLayout() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: 58,
           paddingBottom: 8,
           paddingTop: 8,
+          height: 70,
         },
         tabBarLabelStyle: {
           fontFamily: 'Manrope',
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '600',
+          marginTop: 1,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
         },
       }}
     >
@@ -38,7 +42,7 @@ export default function TabsLayout() {
         options={{
           title: 'Charge',
           tabBarIcon: ({ color, focused }) => (
-            <Icon name="qr" size={22} color={color} strokeWidth={focused ? 2 : 1.5} />
+            <Icon name="zap" size={22} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
         }}
       />

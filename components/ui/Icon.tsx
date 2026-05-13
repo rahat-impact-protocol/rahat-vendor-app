@@ -30,14 +30,14 @@ export const Icon: React.FC<IconProps> = ({
         <Polyline points="9,22 9,12 15,12 15,22" {...props} />
       </>
     ),
-    qr: (
-      <>
-        <Rect x="3" y="3" width="7" height="7" rx="1" {...props} />
-        <Rect x="14" y="3" width="7" height="7" rx="1" {...props} />
-        <Rect x="14" y="14" width="7" height="7" rx="1" {...props} />
-        <Rect x="3" y="14" width="7" height="7" rx="1" {...props} />
-      </>
-    ),
+    // qr: (
+    //   <>
+    //     <Rect x="3" y="3" width="7" height="7" rx="1" {...props} />
+    //     <Rect x="14" y="3" width="7" height="7" rx="1" {...props} />
+    //     <Rect x="14" y="14" width="7" height="7" rx="1" {...props} />
+    //     <Rect x="3" y="14" width="7" height="7" rx="1" {...props} />
+    //   </>
+    // ),
     users: (
       <>
         <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" {...props} />
@@ -160,6 +160,24 @@ export const Icon: React.FC<IconProps> = ({
         <Line x1="12" y1="17" x2="12" y2="19" {...props} />
       </>
     ),
+    'arrow-up-right': (
+      <>
+        <Line x1="7" y1="17" x2="17" y2="7" {...props} />
+        <Polyline points="7,7 17,7 17,17" {...props} />
+      </>
+    ),
+    'wifi-off': (
+      <>
+        <Line x1="1" y1="1" x2="23" y2="23" {...props} />
+        <Path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" {...props} />
+        <Path d="M5 12.55a11 11 0 0 1 5.17-2.39" {...props} />
+        <Path d="M10.71 5.05A16 16 0 0 1 22.56 9" {...props} />
+        <Path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" {...props} />
+        <Path d="M8.53 16.11a6 6 0 0 1 6.95 0" {...props} />
+        <Line x1="12" y1="20" x2="12.01" y2="20" {...props} />
+      </>
+    ),
+    zap: <Polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" {...props} />,
   };
 
   return (

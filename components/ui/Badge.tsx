@@ -12,9 +12,9 @@ interface BadgeProps {
 const variantStyles: Record<BadgeVariant, { color: string; background: string; border?: string }> = {
   online:    { color: Colors.primary,     background: Colors.primarySubtle },
   offline:   { color: Colors.textSecondary, background: '#F0F0F0' },
-  completed: { color: Colors.success,     background: '#ECFDF5' },
+  completed: { color: '#027A48',          background: '#DCFCE7' },
   approved:  { color: Colors.success,     background: '#ECFDF5' },
-  pending:   { color: '#B54708',          background: '#FFFAEB' },
+  pending:   { color: '#B54708',          background: '#FFF3CD' },
   rejected:  { color: Colors.error,       background: '#FEF2F2' },
   default:   { color: Colors.textSecondary, background: '#F0F0F0' },
 };
@@ -32,12 +32,13 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'flex-start',
     borderRadius: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
   },
   text: {
     fontFamily: 'Manrope',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
