@@ -30,14 +30,21 @@ export const Icon: React.FC<IconProps> = ({
         <Polyline points="9,22 9,12 15,12 15,22" {...props} />
       </>
     ),
-    // qr: (
-    //   <>
-    //     <Rect x="3" y="3" width="7" height="7" rx="1" {...props} />
-    //     <Rect x="14" y="3" width="7" height="7" rx="1" {...props} />
-    //     <Rect x="14" y="14" width="7" height="7" rx="1" {...props} />
-    //     <Rect x="3" y="14" width="7" height="7" rx="1" {...props} />
-    //   </>
-    // ),
+    qr: (
+      <>
+        <Rect x="3" y="3" width="7" height="7" rx="1" {...props} />
+        <Rect x="5" y="5" width="3" height="3" fill={color} stroke="none" />
+        <Rect x="14" y="3" width="7" height="7" rx="1" {...props} />
+        <Rect x="16" y="5" width="3" height="3" fill={color} stroke="none" />
+        <Rect x="3" y="14" width="7" height="7" rx="1" {...props} />
+        <Rect x="5" y="16" width="3" height="3" fill={color} stroke="none" />
+        <Rect x="14" y="14" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="17" y="14" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="14" y="17" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="17" y="17" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="20" y="20" width="2" height="2" fill={color} stroke="none" />
+      </>
+    ),
     users: (
       <>
         <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" {...props} />
@@ -178,6 +185,25 @@ export const Icon: React.FC<IconProps> = ({
       </>
     ),
     zap: <Polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" {...props} />,
+    search: (
+      <>
+        <Circle cx="11" cy="11" r="8" {...props} />
+        <Line x1="21" y1="21" x2="16.65" y2="16.65" {...props} />
+      </>
+    ),
+    'external-link': (
+      <>
+        <Path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" {...props} />
+        <Polyline points="15,3 21,3 21,9" {...props} />
+        <Line x1="10" y1="14" x2="21" y2="3" {...props} />
+      </>
+    ),
+    lock: (
+      <>
+        <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" {...props} />
+        <Path d="M7 11V7a5 5 0 0 1 10 0v4" {...props} />
+      </>
+    ),
   };
 
   return (

@@ -160,10 +160,10 @@ export default function HomeScreen() {
   );
 }
 
-const HERO_COLOR = "#7461D6";
+const HERO_COLOR = "#1A56DB";//7461D6";
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F7F9FC" },
+  screen: { flex: 1, backgroundColor: "#F7F9FC" },//#1A56DB
   hero: {
     backgroundColor: HERO_COLOR,
     paddingHorizontal: 20,

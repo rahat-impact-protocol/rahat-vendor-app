@@ -10,21 +10,21 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, Rect, Polyline } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { useAuthStore } from '@/stores';
 import { authService } from '@/services';
-import { Colors } from '@/constants/tokens';
+
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 260;
-const STATS_CARD_HEIGHT = 80;
 const STATS_CARD_OVERLAP = 40;
 
-const STATS = [
-  { value: '2.4M+', label: 'TOKENS' },
-  { value: '18.5K', label: 'BENEFICIARIES' },
-  { value: '340',   label: 'VENDORS' },
-];
+// const STATS = [
+//   { value: '2.4M+', label: 'TOKENS' },
+//   { value: '18.5K', label: 'BENEFICIARIES' },
+//   { value: '340',   label: 'VENDORS' },
+// ];
 
 const GoogleLogo = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24">
@@ -34,6 +34,7 @@ const GoogleLogo = () => (
     <Path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
   </Svg>
 );
+
 
 
 export default function LoginScreen() {
@@ -61,63 +62,52 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Hero photo block ── */}
-        <View style={[styles.heroWrapper, { paddingTop: insets.top }]}>
-          <ImageBackground
-            source={require('@/assets/images/rahat-background.png')}
-            style={styles.heroBg}
-            resizeMode="cover"
-          >
-            {/* dark scrim */}
-            <View style={styles.heroScrim} />
+        <ImageBackground
+          source={require('@/assets/images/rahat-background.png')}
+          style={[styles.heroBg, { paddingTop: insets.top }]}
+          resizeMode="cover"
+        >
+          {/* dark scrim */}
+          <View style={styles.heroScrim} />
 
-            {/* text sits above the stats card overlap area */}
-            <View style={styles.heroContent}>
-              <Text style={styles.heroTitle}>Rahat Identity</Text>
-              <Text style={styles.heroSub}>Aid that reaches everyone.</Text>
-            </View>
-          </ImageBackground>
+          {/* Title text */}
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>Rahat Identity</Text>
+            <Text style={styles.heroSub}>Aid that reaches everyone.</Text>
+          </View>
+        </ImageBackground>
 
-          {/* ── Floating stats card ── */}
-          {/* <View style={styles.statsCard}>
-            {STATS.map(({ value, label }, i) => (
-              <React.Fragment key={label}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{value}</Text>
-                  <Text style={styles.statLabel}>{label}</Text>
-                </View>
-                {i < STATS.length - 1 && <View style={styles.statSep} />}
-              </React.Fragment>
-            ))}
-          </View> */}
-        </View>
+        {/* ── White sheet with rounded top corners ── */}
+        <View style={styles.whiteSheet}>
 
-        {/* ── Sign-in section ── */}
-        <View style={styles.signInSection}>
-          <Text style={styles.signInTitle}>Welcome back</Text>
-          <Text style={styles.signInSub}>
-            Sign in to your vendor dashboard to manage{'\n'}distributions.
-          </Text>
-
-          {/* Google button */}
-          <TouchableOpacity
-            onPress={handleGoogleLogin}
-            disabled={loading}
-            activeOpacity={0.8}
-            style={styles.googleBtn}
-          >
-            <GoogleLogo />
-            <Text style={styles.googleBtnText}>
-              {loading ? 'Signing in…' : 'Continue with Google'}
+          {/* ── Sign-in section ── */}
+          <View style={styles.signInSection}>
+            <Text style={styles.signInTitle}>Welcome back</Text>
+            <Text style={styles.signInSub}>
+              Sign in to your vendor dashboard to manage{'\n'}distributions.
             </Text>
-          </TouchableOpacity>
 
-          {/* Terms */}
-          <Text style={styles.terms}>
-            By continuing, you agree to our{' '}
-            <Text style={styles.termsLink}>Terms of Service</Text>
-            {' '}and{' '}
-            <Text style={styles.termsLink}>Privacy Policy</Text>.
-          </Text>
+            {/* Google button */}
+            <TouchableOpacity
+              onPress={handleGoogleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+              style={styles.googleBtn}
+            >
+              <GoogleLogo />
+              <Text style={styles.googleBtnText}>
+                {loading ? 'Signing in…' : 'Continue with Google'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Terms */}
+            <Text style={styles.terms}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.termsLink}>Terms of Service</Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink}>Privacy Policy</Text>.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -134,11 +124,6 @@ const styles = StyleSheet.create({
   },
 
   /* ── Hero ── */
-  heroWrapper: {
-    width: '100%',
-    // extra bottom padding so the floating card doesn't overlap content below
-    paddingBottom: STATS_CARD_HEIGHT / 2,
-  },
   heroBg: {
     width: '100%',
     height: HERO_HEIGHT,
@@ -151,7 +136,7 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     paddingHorizontal: 22,
-    paddingBottom: STATS_CARD_HEIGHT / 2 + 16,
+    paddingBottom: 28,         // extra space so text doesn't hide behind white sheet
   },
   heroTitle: {
     fontFamily: 'Manrope',
@@ -169,23 +154,28 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
+  /* ── White sheet ── */
+  whiteSheet: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,   // ← only these two corners are rounded
+    borderTopRightRadius: 30,
+    marginTop: -24,            // pull up over the hero image
+    paddingTop: 20,
+  },
+
   /* ── Stats card ── */
   statsCard: {
-    position: 'absolute',
-    bottom: 0,
-    left: 16,
-    right: 16,
-    height: STATS_CARD_HEIGHT,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 14,
     paddingHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.34,
-    shadowRadius: 16,
-    elevation: 8,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 4,
   },
   statItem: {
     flex: 1,
@@ -195,9 +185,8 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'Manrope',
     fontWeight: '800',
-    fontSize: 22,
+    fontSize: 20,
     color: '#1F242A',
-    marginBottom: 2,
   },
   statLabel: {
     fontFamily: 'Manrope',
@@ -205,6 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#6B6969',
     letterSpacing: 0.6,
+    marginBottom: 2,
   },
   statSep: {
     width: 1,
@@ -215,7 +205,7 @@ const styles = StyleSheet.create({
   /* ── Sign-in section ── */
   signInSection: {
     paddingHorizontal: 22,
-    paddingTop: 2,
+    paddingTop: 18,
   },
   signInTitle: {
     fontFamily: 'Manrope',
@@ -244,10 +234,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E4E8',
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.04)',
     elevation: 1,
   },
   googleBtnText: {
@@ -255,43 +242,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     color: '#1F242A',
-  },
-
-  /* ── OR divider ── */
-  orRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 18,
-    gap: 12,
-  },
-  orLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#EBEBEB',
-  },
-  orText: {
-    fontFamily: 'Manrope',
-    fontWeight: '600',
-    fontSize: 12,
-    color: '#BDC0C2',
-    letterSpacing: 0.8,
-  },
-
-  /* ── Email button ── */
-  emailBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    height: 52,
-    backgroundColor: '#141C27',
-    borderRadius: 10,
-  },
-  emailBtnText: {
-    fontFamily: 'Manrope',
-    fontWeight: '700',
-    fontSize: 15,
-    color: '#FFFFFF',
   },
 
   /* ── Terms ── */

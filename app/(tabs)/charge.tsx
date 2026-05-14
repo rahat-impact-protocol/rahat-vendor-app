@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -7,75 +7,250 @@ import {
   StyleSheet,
   TextInput,
   Keyboard,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { Avatar } from '@/components/ui/Avatar';
-import { Icon } from '@/components/ui/Icon';
-import { Colors, Radius, Shadows } from '@/constants/tokens';
-import { MOCK_BENEFICIARIES } from '@/mocks';
-import type { Beneficiary } from '@/types';
+  Clipboard,
+  ActivityIndicator,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { z } from "zod";
+import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
+import { Colors, Radius, Shadows } from "@/constants/tokens";
+import { MOCK_BENEFICIARIES } from "@/mocks";
+import type { Beneficiary } from "@/types";
 
-type Step = 'input' | 'confirm' | 'otp' | 'success';
+// ── Zod schema ────────────────────────────────────────────────
+const phoneSchema = z
+  .string()
+  .min(7, "Phone number must be at least 7 digits")
+  .max(15, "Phone number must be at most 15 digits")
+  .regex(/^\d+$/, "Phone number must contain digits only");
 
-// ── OTP dots loader ──────────────────────────────────────────
-const AnimatedDots: React.FC = () => {
-  const [active, setActive] = React.useState(0);
-  React.useEffect(() => {
-    const id = setInterval(() => setActive(x => (x + 1) % 6), 140);
-    return () => clearInterval(id);
-  }, []);
+type Step = "input" | "confirm" | "otp" | "success";
+
+const STEP_META: Record<Step, { index: number; label: string }> = {
+  input: { index: 1, label: "Find Beneficiary" },
+  confirm: { index: 2, label: "Confirm Details" },
+  otp: { index: 3, label: "Verify OTP" },
+  success: { index: 4, label: "Charge Successful" },
+};
+const TOTAL_STEPS = 4;
+
+const PRIMARY_BLUE = "#1A56DB";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const PURPLE_MID = "#F5F0FF";
+const BORDER_COLOR = "#E5E7EB";
+const TEXT_PRIMARY = "#111827";
+const TEXT_SECONDARY = "#6B7280";
+const TEXT_MUTED = "#9CA3AF";
+const SURFACE = "#FFFFFF";
+const BG_LIGHT = "#F9FAFB";
+const ERROR_COLOR = "#DC2626";
+const DETAIL_BG = "#E8F1FA";
+const DETAIL_BORDER = "#C8DDEF";
+
+// ── Wizard Header ─────────────────────────────────────────────
+const WizardHeader: React.FC<{ step: Step }> = ({ step }) => {
+  const meta = STEP_META[step];
+  const pct = Math.round((meta.index / TOTAL_STEPS) * 100);
   return (
-    <View style={{ flexDirection: 'row', gap: 4 }}>
-      {[0, 1, 2, 3, 4, 5].map(i => (
-        <View
-          key={i}
-          style={{
-            width: 5, height: 5, borderRadius: 3,
-            backgroundColor: i === active ? Colors.primary : '#E5E7EB',
-          }}
-        />
-      ))}
+    <View style={hdr.container}>
+      <View style={hdr.hero}>
+        <View style={hdr.circle1} />
+        <View style={hdr.circle2} />
+        <View style={hdr.circle3} />
+      </View>
+      <Text style={hdr.bannerTitle}>Humanitarian Portal</Text>
+      <View style={hdr.track}>
+        <Text style={hdr.stepText}>
+          Step {meta.index} of {TOTAL_STEPS}
+        </Text>
+        <Text style={hdr.pctText}>{pct}%</Text>
+      </View>
+      <View style={hdr.barBg}>
+        <View style={[hdr.barFill, { width: `${pct}%` as any }]} />
+      </View>
     </View>
   );
 };
 
+const hdr = StyleSheet.create({
+  hero: {
+    backgroundColor: PRIMARY_BLUE,
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    position: "relative",
+    overflow: "visible",
+    zIndex: 10,
+  },
+  circle1: {
+    position: "absolute",
+    right: -20,
+    top: -20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  circle2: {
+    position: "absolute",
+    right: 55,
+    top: 25,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  circle3: {
+    position: "absolute",
+    left: -30,
+    bottom: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  container: {
+    backgroundColor: PRIMARY_BLUE,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
+    height: 130,
+    // marginBottom: 20,
+  },
+  bannerTitle: {
+    fontFamily: "Manrope",
+    fontWeight: "700",
+    fontSize: 18,
+    color: "#fff",
+    marginBottom: 14,
+  },
+  track: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  stepText: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.8)",
+  },
+  pctText: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  barBg: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 100,
+  },
+  barFill: {
+    height: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 100,
+  },
+});
+
+// ── Secure Footer ─────────────────────────────────────────────
+const SecureFooter: React.FC = () => (
+  <View style={ft.row}>
+    <Icon name="lock" size={12} color={TEXT_MUTED} />
+    <Text style={ft.text}>Encrypted &amp; Secure Verification</Text>
+  </View>
+);
+
+const ft = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    justifyContent: "center",
+    paddingVertical: 14,
+    // borderTopWidth: 1,
+    // borderTopColor: BORDER_COLOR,
+  },
+  text: {
+    fontFamily: "Manrope",
+    fontSize: 11,
+    color: TEXT_MUTED,
+    fontWeight: "500",
+  },
+});
+
+// ── Section Label ─────────────────────────────────────────────
+const SectionLabel: React.FC<{ label: string; style?: object }> = ({
+  label,
+  style,
+}) => <Text style={[sl.label, style]}>{label}</Text>;
+const sl = StyleSheet.create({
+  label: {
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: TEXT_MUTED,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+});
+
+// ── Main Screen ───────────────────────────────────────────────
 export default function ChargeScreen() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
 
-  const [step, setStep] = React.useState<Step>('input');
-  const [phone, setPhone] = React.useState('');
-  const [beneficiary, setBeneficiary] = React.useState<Beneficiary | null>(null);
-  const [otp, setOtp] = React.useState(['', '', '', '', '', '']);
+  const [step, setStep] = React.useState<Step>("input");
+  const [phone, setPhone] = React.useState("");
+  const [phoneError, setPhoneError] = React.useState("");
+  const [beneficiary, setBeneficiary] = React.useState<Beneficiary | null>(
+    null,
+  );
+  const [otp, setOtp] = React.useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [txHash] = React.useState("0x71c...3a4f");
   const otpRefs = React.useRef<(TextInput | null)[]>([]);
 
   const filledOtp = otp.filter(Boolean).length;
 
+  // Validate phone with Zod
+  const validatePhone = (val: string): boolean => {
+    const result = phoneSchema.safeParse(val);
+    if (!result.success) {
+      setPhoneError("Phone number is required");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const handlePhoneChange = (val: string) => {
+    setPhone(val);
+    if (phoneError) validatePhone(val);
+  };
+
   const handleFindBeneficiary = async () => {
-    if (phone.length < 7) return;
+    if (!validatePhone(phone)) return;
     setLoading(true);
     Keyboard.dismiss();
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 600));
-    const b = MOCK_BENEFICIARIES.find(b => b.isOnline) ?? MOCK_BENEFICIARIES[0];
+    await new Promise((r) => setTimeout(r, 600));
+    const b =
+      MOCK_BENEFICIARIES.find((b) => b.isOnline) ?? MOCK_BENEFICIARIES[0];
     setBeneficiary({ ...b, phone });
     setLoading(false);
-    setStep('confirm');
+    setStep("confirm");
   };
 
   const handleConfirm = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
     setLoading(false);
-    setStep('otp');
+    setStep("otp");
   };
 
   const handleOtpChange = (i: number, val: string) => {
@@ -88,377 +263,704 @@ export default function ChargeScreen() {
   };
 
   const handleOtpKeyPress = (i: number, key: string) => {
-    if (key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
+    if (key === "Backspace" && !otp[i] && i > 0)
+      otpRefs.current[i - 1]?.focus();
   };
 
   const handleVerify = async () => {
-    if (filledOtp < 6) { setOtpError(true); return; }
+    if (filledOtp < 6) {
+      setOtpError(true);
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
+    await new Promise((r) => setTimeout(r, 1400));
     setLoading(false);
-    setStep('success');
+    setStep("success");
   };
 
   const handleReset = () => {
-    setStep('input');
-    setPhone('');
+    setStep("input");
+    setPhone("");
+    setPhoneError("");
     setBeneficiary(null);
-    setOtp(['', '', '', '', '', '']);
+    setOtp(["", "", "", "", "", ""]);
     setOtpError(false);
   };
 
-  // ── Success screen ──────────────────────────────────────────
-  if (step === 'success') {
+  // ── Success ────────────────────────────────────────────────
+  if (step === "success") {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <PageHeader title="Redeem Receipt" showBack onBack={handleReset} />
-        <ScrollView contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-          {/* Amount */}
-          <View style={styles.amountRow}>
-            <Text style={styles.amountLabel}>Amount</Text>
-            <Text style={styles.amountValue}>12</Text>
-          </View>
-
-          {/* Detail card */}
-          <View style={styles.detailCard}>
-            <View style={styles.detailHeader}>
-              <View style={styles.checkIcon}>
-                <Icon name="check" size={20} color={Colors.primary} strokeWidth={2.5} />
-              </View>
-              <View>
-                <Text style={styles.detailTitle}>Redeemed</Text>
-                <Text style={styles.detailDate}>{new Date().toLocaleString()}</Text>
-                <Text style={styles.receivedLabel}>Received</Text>
+      <View style={[s.screen, { paddingTop: insets.top }]}>
+        <WizardHeader step="success" />
+        <View style={s.whiteSheet}>
+          <ScrollView
+            contentContainerStyle={s.scrollPad}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Checkmark */}
+            <View style={s.successIconOuter}>
+              <View style={s.successIcon}>
+                <Icon name="check" size={28} color="#fff" strokeWidth={3} />
               </View>
             </View>
 
-            <View style={styles.detailGrid}>
-              {[
-                ['Name', beneficiary?.maskedName ?? 'Aadarsha L.'],
-                ['Phone', `+977-${phone}`],
-                ['Project', 'Relief Nepal'],
-                ['Tx Hash', '0x5e68...455'],
-              ].map(([k, v]) => (
-                <View key={k} style={styles.detailCell}>
-                  <Text style={styles.detailKey}>{k}</Text>
-                  <Text style={styles.detailVal}>{v}</Text>
+            <Text style={s.successTitle}>Charge Successful</Text>
+            <Text style={s.successTokens}>
+              {beneficiary?.tokensApproved ?? 12}{" "}
+              <Text style={s.successTokensUnit}>Tokens</Text>
+            </Text>
+
+            {/* Detail card */}
+            <View style={s.detailCard}>
+              <View style={s.detailRow}>
+                <Text style={s.detailKey}>BENEFICIARY NAME</Text>
+                <Text style={s.detailVal}>
+                  {beneficiary?.maskedName ?? "A*****a L**********e"}
+                </Text>
+              </View>
+              <View style={s.detailRowGroup}>
+                <View style={s.detailHalf}>
+                  <Text style={s.detailKey}>PHONE NUMBER</Text>
+                  <Text style={s.detailVal}>+977 {phone}</Text>
                 </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={{ gap: 8, marginTop: 4 }}>
-            <Button label="View in Blockchain Explorer" variant="outline" icon="arrow-right" />
-            <Button label="Back to Home" variant="ghost" onPress={handleReset} />
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // ── OTP screen ──────────────────────────────────────────────
-  if (step === 'otp') {
-    return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <PageHeader title="Verify Beneficiary" showBack onBack={() => setStep('confirm')} />
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-            {/* Shield icon */}
-            <View style={styles.shieldIcon}>
-              <Icon name="shield" size={26} color={Colors.primary} />
-            </View>
-            <Text style={styles.otpTitle}>Beneficiary Verification</Text>
-            <Text style={styles.otpSub}>
-              A 6-digit code has been sent to the beneficiary's phone{phone ? ` +977-${phone}` : ''}. Ask them to share it with you.
-            </Text>
-
-            {/* OTP boxes */}
-            <View style={styles.otpRow}>
-              {otp.map((val, i) => (
-                <TextInput
-                  key={i}
-                  ref={el => { otpRefs.current[i] = el; }}
-                  value={val}
-                  onChangeText={v => handleOtpChange(i, v)}
-                  onKeyPress={({ nativeEvent: { key } }) => handleOtpKeyPress(i, key)}
-                  maxLength={1}
-                  keyboardType="number-pad"
-                  style={[
-                    styles.otpBox,
-                    val && styles.otpBoxFilled,
-                    otpError && styles.otpBoxError,
-                  ]}
-                  textAlign="center"
-                />
-              ))}
-            </View>
-
-            {otpError && (
-              <Text style={styles.otpError}>Please enter all 6 digits</Text>
-            )}
-
-            {/* Progress bar */}
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${(filledOtp / 6) * 100}%` as any }]} />
-            </View>
-
-            {loading ? (
-              <View style={styles.verifyingRow}>
-                <AnimatedDots />
-                <Text style={styles.verifyingText}>Verifying…</Text>
+                <View style={[s.detailHalf, s.detailHalfBorder]}>
+                  <Text style={s.detailKey}>PROJECT</Text>
+                  <Text style={s.detailVal}>Winter Relief 2026</Text>
+                </View>
               </View>
-            ) : (
+              <View style={[s.detailRow, { borderBottomWidth: 0 }]}>
+                <Text style={s.detailKey}>TRANSACTION HASH</Text>
+                <View style={s.txRow}>
+                  <Text style={s.detailVal}>{txHash}</Text>
+                  <TouchableOpacity
+                    onPress={() => Clipboard.setString(txHash)}
+                    hitSlop={8}
+                  >
+                    <Icon name="copy" size={16} color={PRIMARY_BLUE} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ gap: 12, marginTop: 4 }}>
               <Button
-                label="Verify & Complete Charge"
-                onPress={handleVerify}
-                disabled={filledOtp < 6}
+                label="View in Blockchain Explorer"
+                variant="outline"
+                icon="external-link"
               />
-            )}
-
-            <Text style={styles.resendRow}>
-              Didn't receive it?{' '}
-              <Text style={styles.resendLink}>Resend code</Text>
-            </Text>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    );
-  }
-
-  // ── Confirm screen ──────────────────────────────────────────
-  if (step === 'confirm' && beneficiary) {
-    return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <PageHeader title="Confirm Charge" showBack onBack={() => setStep('input')} />
-        <ScrollView contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-          <View style={styles.confirmCard}>
-            <View style={styles.confirmProfile}>
-              <Avatar initials={beneficiary.initials} size={46} />
-              <View>
-                <Text style={styles.confirmName}>{beneficiary.maskedName}</Text>
-                <Text style={styles.confirmPhone}>+977-{phone}</Text>
-              </View>
+              <TouchableOpacity onPress={handleReset} style={s.backHomeBtn}>
+                <Icon name="home" size={14} color={TEXT_SECONDARY} />
+                <Text style={s.backHomeText}>Back to Home</Text>
+              </TouchableOpacity>
             </View>
-
-            {[
-              ['Tokens Available', `${beneficiary.tokensAvailable}`],
-              ['Tokens Approved', `${beneficiary.tokensApproved}`],
-              ['Project', 'Relief Nepal 2025'],
-            ].map(([k, v]) => (
-              <View key={k} style={styles.confirmRow}>
-                <Text style={styles.confirmKey}>{k}</Text>
-                <Text style={styles.confirmVal}>{v}</Text>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <Button label="Confirm & Charge" onPress={handleConfirm} loading={loading} />
-          <Button label="Cancel" variant="ghost" onPress={() => setStep('input')} />
+            <SecureFooter />
+          </ScrollView>
         </View>
       </View>
     );
   }
 
-  // ── Input screen (default) ──────────────────────────────────
-  return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-          <Text style={styles.fieldLabel}>Phone number</Text>
-          <View style={styles.phoneRow}>
-            <View style={styles.dialCode}>
-              <Text style={styles.flag}>🇳🇵</Text>
-              <Text style={styles.dialText}>+977</Text>
-              <Icon name="chevron-down" size={13} color={Colors.textMuted} />
-            </View>
-            <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="98XXXXXXXX"
-              keyboardType="phone-pad"
-              style={styles.phoneInput}
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
+  // ── OTP ───────────────────────────────────────────────────
+  if (step === "otp") {
+    return (
+      <View style={[s.screen, { paddingTop: insets.top }]}>
+        <WizardHeader step="otp" />
+        <View style={s.whiteSheet}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <ScrollView
+              contentContainerStyle={s.scrollPad}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={s.stepTitle}>Verify OTP</Text>
+              <Text style={s.stepSub}>
+                Ask the beneficiary to share the OTP sent to their phone.
+              </Text>
 
-          <View style={{ marginTop: 24 }}>
-            <Button
-              label="Find Beneficiary"
-              onPress={handleFindBeneficiary}
-              disabled={phone.length < 7}
-              loading={loading}
-            />
-          </View>
+              <View style={s.otpRow}>
+                {otp.map((val, i) => (
+                  <TextInput
+                    key={i}
+                    ref={(el) => {
+                      otpRefs.current[i] = el;
+                    }}
+                    value={val}
+                    onChangeText={(v) => handleOtpChange(i, v)}
+                    onKeyPress={({ nativeEvent: { key } }) =>
+                      handleOtpKeyPress(i, key)
+                    }
+                    maxLength={1}
+                    keyboardType="number-pad"
+                    style={[
+                      s.otpBox,
+                      val && s.otpBoxFilled,
+                      otpError && s.otpBoxError,
+                    ]}
+                    textAlign="center"
+                  />
+                ))}
+              </View>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or use another method</Text>
-            <View style={styles.dividerLine} />
-          </View>
+              {otpError && (
+                <Text style={s.otpErrorText}>Please enter all 6 digits</Text>
+              )}
 
-          {/* Alt methods */}
-          <View style={{ gap: 8 }}>
-            {[
-              { icon: 'qr',  label: 'Scan QR Code', sub: 'Open camera to scan beneficiary QR' },
-              { icon: 'nfc', label: 'Tap NFC Card',  sub: 'Hold card near device to charge' },
-            ].map(({ icon, label, sub }) => (
-              <TouchableOpacity key={label} style={styles.altMethod} activeOpacity={0.75}>
-                <View style={styles.altIcon}>
-                  <Icon name={icon} size={18} color={Colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.altLabel}>{label}</Text>
-                  <Text style={styles.altSub}>{sub}</Text>
-                </View>
-                <Icon name="chevron-right" size={15} color={Colors.textMuted} />
+              <TouchableOpacity style={s.resendBtn}>
+                <Text style={s.resendLink}>Resend code</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+              <View style={{ marginTop: 12 }}>
+                <Button
+                  label="Verify & Complete Charge"
+                  icon="zap"
+                  onPress={handleVerify}
+                  loading={loading}
+                  disabled={filledOtp < 6}
+                />
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setStep("confirm")}
+                style={s.cancelBtn}
+              >
+                <Text style={s.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </KeyboardAvoidingView>
+          <SecureFooter />
+        </View>
+      </View>
+    );
+  }
+
+  // ── Confirm ───────────────────────────────────────────────
+  if (step === "confirm" && beneficiary) {
+    return (
+      <View style={[s.screen, { paddingTop: insets.top }]}>
+        <WizardHeader step="confirm" />
+        <View style={s.whiteSheet}>
+          <ScrollView
+            contentContainerStyle={s.scrollPad}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={s.stepTitle}>Confirm Details</Text>
+
+            <SectionLabel label="Beneficiary Information" />
+            <View style={s.beneCard}>
+              <View style={s.beneNameSection}>
+                <Text style={s.beneKey}>NAME</Text>
+                <Text style={s.beneName}>{beneficiary.maskedName}</Text>
+              </View>
+              <View style={[s.beneRow, s.beneBorderTop]}>
+                <View style={s.beneHalf}>
+                  <Text style={s.beneKey}>PHONE</Text>
+                  <Text style={s.beneVal}>+977 {phone}</Text>
+                </View>
+                <View style={s.beneHalf}>
+                  <Text style={s.beneKey}>PROJECT</Text>
+                  <Text style={s.beneVal}>Winter Relief 2026</Text>
+                </View>
+              </View>
+            </View>
+
+            <SectionLabel label="Token Allocation" style={{ marginTop: 20 }} />
+            <View style={s.tokenCard}>
+              <View style={s.tokenHalf}>
+                <Text style={s.tokenLabel}>AVAILABLE</Text>
+                <Text style={s.tokenAvail}>
+                  {beneficiary.tokensAvailable}{" "}
+                  <Text style={s.tokenUnit}>Tokens</Text>
+                </Text>
+              </View>
+              <View style={[s.tokenHalf, s.tokenApprovedSide]}>
+                <Text style={s.tokenLabelApproved}>APPROVED</Text>
+                <Text style={s.tokenApproved}>
+                  {beneficiary.tokensApproved}{" "}
+                  <Text style={s.tokenApprovedUnit}>Tokens</Text>
+                </Text>
+              </View>
+            </View>
+
+            <View style={s.confirmFooter}>
+              <Button
+                label="Confirm & Charge"
+                icon="zap"
+                onPress={handleConfirm}
+                loading={loading}
+              />
+              <TouchableOpacity
+                onPress={() => setStep("input")}
+                style={s.cancelBtn}
+              >
+                <Text style={s.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <SecureFooter />
+          </ScrollView>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Input (default) ───────────────────────────────────────
+  return (
+    <View style={[s.screen, { paddingTop: insets.top }]}>
+      <WizardHeader step="input" />
+      <View style={s.whiteSheet}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={s.scrollPad}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={s.stepTitle}>Find Beneficiary</Text>
+            <Text style={s.stepSub}>
+              Enter contact information or use biometric alternatives to
+              identify the beneficiary.
+            </Text>
+
+            <Text style={s.fieldLabel}>PHONE NUMBER</Text>
+            <View style={[s.phoneRow, phoneError ? s.phoneRowError : null]}>
+              <View style={s.dialCode}>
+                <Text style={s.dialText}>+977</Text>
+              </View>
+              <TextInput
+                value={phone}
+                onChangeText={handlePhoneChange}
+                placeholder="Enter phone number"
+                keyboardType="phone-pad"
+                style={s.phoneInput}
+                placeholderTextColor={TEXT_MUTED}
+              />
+            </View>
+            {phoneError ? (
+              <Text style={s.phoneErrorText}>{phoneError}</Text>
+            ) : null}
+
+            <View style={{ marginTop: 20 }}>
+              <Button
+                label="Find Beneficiary"
+                onPress={handleFindBeneficiary}
+                loading={loading}
+                icon="search"
+              />
+            </View>
+
+            <View style={s.divider}>
+              <View style={s.dividerLine} />
+              <Text style={s.dividerText}>OR</Text>
+              <View style={s.dividerLine} />
+            </View>
+
+            <View style={{ gap: 12 }}>
+              {[
+                {
+                  icon: "qr",
+                  label: "Scan QR Code",
+                  sub: "Scan beneficiary ID card",
+                },
+                {
+                  icon: "nfc",
+                  label: "Tap NFC Card",
+                  sub: "Contactless ID verification",
+                },
+              ].map(({ icon, label, sub }) => (
+                <TouchableOpacity
+                  key={label}
+                  style={s.altMethod}
+                  activeOpacity={0.75}
+                >
+                  <View style={s.altIcon}>
+                    <Icon name={icon} size={20} color={PURPLE} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.altLabel}>{label}</Text>
+                    <Text style={s.altSub}>{sub}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <SecureFooter />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.surface },
-  scrollPad: { padding: 20, paddingBottom: 40 },
+// ── Styles ────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: SURFACE,
+  },
+  scrollPad: {
+    padding: 20,
+    paddingBottom: 32,
+  },
+  whiteSheet: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 30, // ← only these two corners are rounded
+    borderTopRightRadius: 30,
+    marginTop: -24, // pull up over the hero image
+    paddingTop: 20,
+  },
 
-  // Input step
+  // Step title / sub
+  stepTitle: {
+    fontFamily: "Manrope",
+    fontWeight: "800",
+    fontSize: 22,
+    color: TEXT_PRIMARY,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  stepSub: {
+    fontFamily: "Manrope",
+    fontSize: 13,
+    color: TEXT_SECONDARY,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+
+  // ── Input step ──────────────────────────────────────────────
   fieldLabel: {
-    fontFamily: 'Manrope', fontSize: 12, fontWeight: '600', color: Colors.textSecondary,
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: TEXT_MUTED,
+    letterSpacing: 1.2,
     marginBottom: 8,
   },
   phoneRow: {
-    flexDirection: 'row',
-    borderWidth: 1, borderColor: Colors.border,
-    borderRadius: 10, overflow: 'hidden',
-    backgroundColor: Colors.surface,
+    flexDirection: "row",
+    borderWidth: 1.5,
+    borderColor: BORDER_COLOR,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: SURFACE,
+  },
+  phoneRowError: {
+    borderColor: ERROR_COLOR,
   },
   dialCode: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 12, paddingVertical: 12,
-    borderRightWidth: 1, borderRightColor: '#F3F4F6',
-    backgroundColor: Colors.bg,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRightWidth: 1,
+    borderRightColor: BORDER_COLOR,
+    backgroundColor: BG_LIGHT,
   },
-  flag: { fontSize: 16 },
-  dialText: { fontFamily: 'Manrope', fontSize: 13, fontWeight: '600', color: Colors.textBody },
+  dialText: {
+    fontFamily: "Manrope",
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_PRIMARY,
+  },
   phoneInput: {
-    flex: 1, height: 48, paddingHorizontal: 14,
-    fontFamily: 'Roboto', fontSize: 15, color: Colors.textPrimary,
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 14,
+    fontFamily: "Manrope",
+    fontSize: 15,
+    color: TEXT_PRIMARY,
+  },
+  phoneErrorText: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    color: ERROR_COLOR,
+    marginTop: 6,
   },
   divider: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginVertical: 24,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#F3F4F6' },
-  dividerText: { fontFamily: 'Manrope', fontSize: 11, color: Colors.textMuted, fontWeight: '500' },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BORDER_COLOR,
+  },
+  dividerText: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    color: TEXT_MUTED,
+    fontWeight: "600",
+  },
   altMethod: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderLight,
-    borderRadius: Radius.card, paddingHorizontal: 16, paddingVertical: 14,
-    ...Shadows.card,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    backgroundColor: BG_LIGHT,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   altIcon: {
-    width: 40, height: 40, borderRadius: Radius.card,
-    backgroundColor: Colors.primarySubtle, alignItems: 'center', justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: PURPLE_LIGHT,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  altLabel: { fontFamily: 'Manrope', fontWeight: '700', fontSize: 13, color: Colors.textPrimary, marginBottom: 2 },
-  altSub: { fontFamily: 'Manrope', fontSize: 11, color: Colors.textMuted },
+  altLabel: {
+    fontFamily: "Manrope",
+    fontWeight: "700",
+    fontSize: 14,
+    color: TEXT_PRIMARY,
+    marginBottom: 2,
+  },
+  altSub: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    color: TEXT_MUTED,
+  },
 
-  // Confirm step
-  confirmCard: {
-    backgroundColor: Colors.bg, borderRadius: 14, borderWidth: 1, borderColor: '#F3F4F6', padding: 16,
+  // ── Confirm step ────────────────────────────────────────────
+  beneCard: {
+    backgroundColor: SURFACE,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    marginBottom: 4,
   },
-  confirmProfile: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', marginBottom: 14,
+  beneNameSection: { padding: 16 },
+  beneBorderTop: { borderTopWidth: 1, borderTopColor: BORDER_COLOR },
+  beneName: {
+    fontFamily: "Manrope",
+    fontWeight: "700",
+    fontSize: 15,
+    color: TEXT_PRIMARY,
+    marginTop: 4,
   },
-  confirmName: { fontFamily: 'Manrope', fontWeight: '700', fontSize: 15, color: Colors.textPrimary },
-  confirmPhone: { fontFamily: 'Manrope', fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  confirmRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+  beneRow: { flexDirection: "row", padding: 16 },
+  beneHalf: { flex: 1 },
+  beneKey: {
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+    marginBottom: 3,
+    textTransform: "uppercase",
   },
-  confirmKey: { fontFamily: 'Manrope', fontSize: 13, color: Colors.textSecondary },
-  confirmVal: { fontFamily: 'Manrope', fontSize: 13, fontWeight: '700', color: Colors.textPrimary },
+  beneVal: {
+    fontFamily: "Manrope",
+    fontSize: 13,
+    fontWeight: "600",
+    color: TEXT_PRIMARY,
+  },
 
-  // OTP step
-  shieldIcon: {
-    width: 56, height: 56, borderRadius: 12,
-    backgroundColor: Colors.primarySubtle,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  tokenCard: {
+    flexDirection: "row",
+    backgroundColor: PURPLE_MID,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E9DCFF",
+    overflow: "hidden",
   },
-  otpTitle: { fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: Colors.textPrimary, marginBottom: 8 },
-  otpSub: { fontFamily: 'Manrope', fontSize: 13, color: Colors.textSecondary, lineHeight: 20, marginBottom: 28 },
-  otpRow: { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  tokenHalf: { flex: 1, padding: 16 },
+  tokenApprovedSide: { borderLeftWidth: 1, borderLeftColor: "#E9DCFF" },
+  tokenLabel: {
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  tokenLabelApproved: {
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: PURPLE,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  tokenAvail: {
+    fontFamily: "Manrope",
+    fontSize: 20,
+    fontWeight: "800",
+    color: TEXT_PRIMARY,
+  },
+  tokenUnit: {
+    fontFamily: "Manrope",
+    fontSize: 13,
+    fontWeight: "500",
+    color: TEXT_SECONDARY,
+  },
+  tokenApproved: {
+    fontFamily: "Manrope",
+    fontSize: 20,
+    fontWeight: "800",
+    color: PURPLE,
+  },
+  tokenApprovedUnit: {
+    fontFamily: "Manrope",
+    fontSize: 13,
+    fontWeight: "500",
+    color: PURPLE,
+  },
+
+  confirmFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: BORDER_COLOR,
+  },
+
+  // ── OTP step ────────────────────────────────────────────────
+  otpRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   otpBox: {
-    flex: 1, height: 46, textAlign: 'center',
-    fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: Colors.textPrimary,
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radius.input,
-    backgroundColor: Colors.bg,
+    flex: 1,
+    width: 40,
+    height: 52,
+    textAlign: "center",
+    fontFamily: "Manrope",
+    fontWeight: "800",
+    fontSize: 20,
+    color: TEXT_PRIMARY,
+    borderWidth: 1.5,
+    borderColor: BORDER_COLOR,
+    borderRadius: 10,
+    backgroundColor: "#FAF8FF",
   },
-  otpBoxFilled: { borderColor: Colors.primary, backgroundColor: Colors.primarySubtle },
-  otpBoxError: { borderColor: '#FCA5A5' },
-  otpError: { fontFamily: 'Manrope', fontSize: 12, color: Colors.error, marginBottom: 8 },
-  progressTrack: {
-    height: 2, backgroundColor: '#F3F4F6', borderRadius: 100, marginBottom: 28, overflow: 'hidden',
+  otpBoxFilled: {
+    borderColor: PURPLE,
+    backgroundColor: PURPLE_MID,
   },
-  progressFill: {
-    height: '100%', backgroundColor: Colors.primary, borderRadius: 100,
+  otpBoxError: {
+    borderColor: ERROR_COLOR,
   },
-  verifyingRow: {
-    height: 48, backgroundColor: Colors.bg, borderRadius: 10,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    borderWidth: 1, borderColor: '#F3F4F6',
+  otpErrorText: {
+    fontFamily: "Manrope",
+    fontSize: 12,
+    color: ERROR_COLOR,
+    marginBottom: 8,
   },
-  verifyingText: { fontFamily: 'Manrope', fontSize: 13, color: Colors.textSecondary },
-  resendRow: {
-    textAlign: 'center', marginTop: 20,
-    fontFamily: 'Manrope', fontSize: 13, color: Colors.textMuted,
+  resendBtn: { alignSelf: "center", paddingVertical: 8, marginBottom: 8 },
+  resendLink: {
+    fontFamily: "Manrope",
+    fontSize: 14,
+    color: PURPLE,
+    fontWeight: "700",
   },
-  resendLink: { color: Colors.primary, fontWeight: '700' },
+  cancelBtn: { alignSelf: "center", paddingVertical: 12 },
+  cancelText: {
+    fontFamily: "Manrope",
+    fontSize: 14,
+    color: TEXT_SECONDARY,
+    fontWeight: "500",
+  },
 
-  // Success step
-  amountRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: Colors.bg, borderRadius: 12, padding: 16,
-    borderWidth: 1, borderColor: '#F3F4F6', marginBottom: 16,
+  // ── Success step ────────────────────────────────────────────
+  successIconOuter: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: PURPLE_LIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginTop: -10,
+    marginBottom: 20,
   },
-  amountLabel: { fontFamily: 'Manrope', fontSize: 14, color: Colors.textMuted },
-  amountValue: { fontFamily: 'Manrope', fontWeight: '800', fontSize: 22, color: Colors.textPrimary },
+  successIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: PURPLE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successTitle: {
+    fontFamily: "Manrope",
+    fontWeight: "800",
+    fontSize: 22,
+    color: TEXT_PRIMARY,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  successTokens: {
+    fontFamily: "Manrope",
+    fontWeight: "800",
+    fontSize: 20,
+    color: PURPLE,
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  successTokensUnit: {
+    fontFamily: "Manrope",
+    fontWeight: "500",
+    fontSize: 16,
+    color: PURPLE,
+  },
+
   detailCard: {
-    backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: '#F3F4F6',
-    overflow: 'hidden', marginBottom: 16,
+    backgroundColor: DETAIL_BG,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: DETAIL_BORDER,
+    marginBottom: 20,
+    overflow: "hidden",
   },
-  detailHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    padding: 16, borderBottomWidth: 1, borderBottomColor: '#F9FAFB',
+  detailRow: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: DETAIL_BORDER,
   },
-  checkIcon: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: Colors.primarySubtle, alignItems: 'center', justifyContent: 'center',
+  detailRowGroup: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: DETAIL_BORDER,
   },
-  detailTitle: { fontFamily: 'Manrope', fontWeight: '700', fontSize: 15, color: Colors.textPrimary, marginBottom: 2 },
-  detailDate: { fontFamily: 'Manrope', fontSize: 12, color: Colors.textMuted, marginBottom: 3 },
-  receivedLabel: { fontFamily: 'Manrope', fontSize: 12, fontWeight: '700', color: Colors.success },
-  detailGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', padding: 16, gap: 16,
+  detailHalf: { flex: 1, padding: 14 },
+  detailHalfBorder: { borderLeftWidth: 1, borderLeftColor: DETAIL_BORDER },
+  detailKey: {
+    fontFamily: "Manrope",
+    fontSize: 10,
+    fontWeight: "700",
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
-  detailCell: { width: '45%' },
-  detailKey: { fontFamily: 'Manrope', fontSize: 11, color: Colors.textMuted, marginBottom: 3 },
-  detailVal: { fontFamily: 'Manrope', fontSize: 13, fontWeight: '700', color: Colors.textPrimary },
+  detailVal: {
+    fontFamily: "Manrope",
+    fontSize: 13,
+    fontWeight: "600",
+    color: TEXT_PRIMARY,
+  },
+  txRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 2 },
 
-  // Shared
-  footer: {
-    padding: 20, paddingBottom: 24, borderTopWidth: 1, borderTopColor: '#F3F4F6', gap: 8,
+  backHomeBtn: {
+    flexDirection: "row",
+    alignSelf: "center",
+    paddingVertical: 10,
+    gap: 6,
+    alignItems: "center",
+  },
+  backHomeText: {
+    fontFamily: "Manrope",
+    fontSize: 14,
+    color: TEXT_SECONDARY,
+    fontWeight: "500",
   },
 });
