@@ -34,6 +34,10 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     scopes: SCOPES,
+    // Force Google to show the consent screen so a new token is issued with
+    // the declared scopes (fixes 403 ACCESS_TOKEN_SCOPE_INSUFFICIENT when a
+    // user's cached token was obtained under a narrower scope).
+    prompt: 'consent',
   });
 
   // Handle OAuth response (mirrors rahat-rp handleCredentialResponse)
@@ -87,10 +91,12 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
   };
 
   // Trigger the OAuth flow (mirrors rahat-rp signIn)
-  const signIn = async () => {
+  // Must be synchronous so window.open() is called within the user-gesture context on web.
+  // State updates before an `await` break the browser's popup-permission check.
+  const signIn = () => {
     setLoading(true);
     setError(null);
-    await promptAsync();
+    promptAsync(); // fire-and-forget; result handled by the useEffect above
   };
 
   // Clear auth state (mirrors rahat-rp signOut)

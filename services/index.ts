@@ -14,6 +14,7 @@ import type {
   VendorRegisterPayload,
   VendorLoginPayload,
   VendorApiResponse,
+  AuthApiResponse,
   ApiProject,
 } from '@/types';
 
@@ -82,6 +83,24 @@ function mapVendor(v: VendorApiResponse): Vendor {
   };
 }
 
+// ─── Extract vendor + token from auth response ────────────────────
+function parseAuthResponse(data: AuthApiResponse): { vendor: Vendor; token: string } {
+  const token = data.access_token ?? data.token ?? '';
+  // vendor might be nested under data.vendor or spread at top level
+  const vendorData: VendorApiResponse = data.vendor ?? {
+    id: data.id ?? '',
+    name: data.name,
+    email: data.email ?? '',
+    phone: data.phone,
+    phoneNumber: data.phoneNumber,
+    walletAddress: data.walletAddress ?? '',
+    role: data.role,
+    projectId: data.projectId,
+    orgId: data.orgId,
+  };
+  return { vendor: mapVendor(vendorData), token };
+}
+
 // ─── Auth ──────────────────────────────────────────────────────────
 export const authService = {
   /**
@@ -101,24 +120,24 @@ export const authService = {
    * POST /vendor/login
    * Logs in an existing vendor on the given project's backend.
    */
-  loginVendor: async (projectBaseUrl: string, payload: VendorLoginPayload): Promise<Vendor> => {
-    const data = await apiFetch<VendorApiResponse>('/vendor/login', {
+  loginVendor: async (projectBaseUrl: string, payload: VendorLoginPayload): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>('/vendor/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     }, projectBaseUrl);
-    return mapVendor(data);
+    return parseAuthResponse(data);
   },
 
   /**
    * POST /vendor
    * Registers a new vendor on the given project's backend.
    */
-  registerVendor: async (projectBaseUrl: string, payload: VendorRegisterPayload): Promise<Vendor> => {
-    const data = await apiFetch<VendorApiResponse>('/vendor', {
+  registerVendor: async (projectBaseUrl: string, payload: VendorRegisterPayload): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>('/vendor', {
       method: 'POST',
       body: JSON.stringify(payload),
     }, projectBaseUrl);
-    return mapVendor(data);
+    return parseAuthResponse(data);
   },
 
   logout: async (): Promise<void> => {

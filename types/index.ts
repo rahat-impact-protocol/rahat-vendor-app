@@ -51,6 +51,26 @@ export interface VendorApiResponse {
   isOnline?: boolean;
 }
 
+/**
+ * Response from login / register endpoints.
+ * Supports both "access_token at top level" and "nested vendor object" patterns.
+ */
+export interface AuthApiResponse {
+  access_token?: string;
+  token?: string;
+  vendor?: VendorApiResponse;
+  // fallback: vendor fields returned at top level
+  id?: string;
+  email?: string;
+  name?: string;
+  phoneNumber?: string;
+  phone?: string;
+  walletAddress?: string;
+  role?: string;
+  projectId?: string;
+  orgId?: string;
+}
+
 // ─── Core Data Models ─────────────────────────────────────────────
 
 export type TransactionStatus = 'completed' | 'pending';

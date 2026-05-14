@@ -1,4 +1,17 @@
 // Design tokens mirroring colors_and_type.css
+import { Platform } from 'react-native';
+
+// Returns native shadow props on iOS/Android and a boxShadow string on web.
+// Prevents the "shadow* style props are deprecated" warning in React Native Web.
+function makeShadow(
+  native: Record<string, unknown>,
+  web: string,
+): Record<string, unknown> {
+  return Platform.select({
+    web: { boxShadow: web } as Record<string, unknown>,
+    default: native,
+  }) as Record<string, unknown>;
+}
 
 export const Colors = {
   // Brand
@@ -81,25 +94,16 @@ export const Radius = {
 } as const;
 
 export const Shadows = {
-  card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  avatar: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  nav: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 2,
-    elevation: 8,
-  },
-} as const;
+  card: makeShadow(
+    { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 2, elevation: 1 },
+    '0 1px 2px rgba(0,0,0,0.06)',
+  ),
+  avatar: makeShadow(
+    { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 8, elevation: 4 },
+    '0 4px 8px rgba(0,0,0,0.10)',
+  ),
+  nav: makeShadow(
+    { shadowColor: '#000', shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.12, shadowRadius: 2, elevation: 8 },
+    '0 -1px 2px rgba(0,0,0,0.12)',
+  ),
+};

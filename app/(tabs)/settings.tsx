@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/stores';
 
 // ── Design tokens (mirrors BeneficiariesScreen) ───────────────
 const HERO       = '#1A56DB';
@@ -56,14 +57,34 @@ const MENU_ITEMS = [
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const logout = useAuthStore(s => s.logout);
+  const vendor = useAuthStore(s => s.vendor);
   const [copied, setCopied] = React.useState(false);
 
-  const walletAddress = '0x5e68qwhs73...37455';
+  const walletAddress = vendor?.walletAddress ?? '—';
 
   function handleCopy() {
     Clipboard.setString(walletAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleLogout() {
+    Alert.alert(
+      'Sign out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            router.replace('/(auth)/login');
+          },
+        },
+      ],
+    );
   }
 
   return (
@@ -102,12 +123,12 @@ export default function SettingsScreen() {
           activeOpacity={0.8}
         >
           <View style={styles.avatarWrap}>
-            <Text style={styles.avatarText}>AL</Text>
+            <Text style={styles.avatarText}>{vendor?.initials ?? '?'}</Text>
             <View style={styles.onlineDot} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Aadarsha Lamichhane</Text>
-            <Text style={styles.profileRole}>Vendor · Relief Nepal 2025</Text>
+            <Text style={styles.profileName}>{vendor?.name ?? 'Vendor'}</Text>
+            <Text style={styles.profileRole}>{vendor?.role ?? 'Vendor'}</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
@@ -177,7 +198,7 @@ export default function SettingsScreen() {
         {/* Sign out */}
         <TouchableOpacity
           style={styles.logoutCard}
-          onPress={() => Alert.alert('Sign out', 'Are you sure?')}
+          onPress={handleLogout}
           activeOpacity={0.8}
         >
           <View style={styles.logoutIconWrap}>

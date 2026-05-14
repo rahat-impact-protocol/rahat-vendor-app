@@ -8,11 +8,14 @@ export const FILE_NAME = 'rahat-vendor-wallet.json';
 
 /**
  * OAuth scopes requested during sign-in.
- * "drive.file" gives access only to files created by this app (user-visible folder).
+ * "drive" (full access) is required because:
+ *  - /about?fields=storageQuota needs drive-level metadata (drive.file is insufficient)
+ *  - files.list must find the Rahat folder across re-installs; drive.file only covers
+ *    files created in the current OAuth session and returns 403 for pre-existing ones
  */
 export const SCOPES = [
   'openid',
   'profile',
   'email',
-  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive',
 ];
