@@ -7,24 +7,19 @@ import {
   ScrollView,
   ImageBackground,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { useAuthStore } from '@/stores';
-import { authService } from '@/services';
+import { useGoogleAuth } from '@/hooks';
+import type { GoogleUser } from '@/types';
 
 
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 260;
-const STATS_CARD_OVERLAP = 40;
-
-// const STATS = [
-//   { value: '2.4M+', label: 'TOKENS' },
-//   { value: '18.5K', label: 'BENEFICIARIES' },
-//   { value: '340',   label: 'VENDORS' },
-// ];
 
 const GoogleLogo = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24">
@@ -40,19 +35,23 @@ const GoogleLogo = () => (
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const login = useAuthStore(s => s.login);
-  const [loading, setLoading] = React.useState(false);
+  const setGoogleUser = useAuthStore(s => s.setGoogleUser);
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      const vendor = await authService.loginWithGoogle();
-      login(vendor);
-      router.replace('/(tabs)');
-    } finally {
-      setLoading(false);
-    }
+  const handleGoogleSuccess = (user: GoogleUser) => {
+    // Store the Google user and let the setup screen handle
+    // the login/register API calls after the form is filled.
+    setGoogleUser(user);
+    router.replace('/(auth)/setup');
   };
+
+  const handleGoogleError = (err: Error) => {
+    Alert.alert('Sign-in failed', err.message);
+  };
+
+  const { signIn, loading, requestReady } = useGoogleAuth({
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleError,
+  });
 
   return (
     <View style={styles.screen}>
@@ -89,10 +88,10 @@ export default function LoginScreen() {
 
             {/* Google button */}
             <TouchableOpacity
-              onPress={handleGoogleLogin}
-              disabled={loading}
+              onPress={signIn}
+              disabled={loading || !requestReady}
               activeOpacity={0.8}
-              style={styles.googleBtn}
+              style={[styles.googleBtn, loading && { opacity: 0.7 }]}
             >
               <GoogleLogo />
               <Text style={styles.googleBtnText}>

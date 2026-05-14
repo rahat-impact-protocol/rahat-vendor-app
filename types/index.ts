@@ -1,3 +1,56 @@
+// ─── Google OAuth User ────────────────────────────────────────────
+
+export interface GoogleUser {
+  id: string;
+  name: string;
+  email: string;
+  picture?: string;
+  accessToken?: string;
+}
+
+// ─── API Request / Response types ────────────────────────────────
+
+export interface ApiProject {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  location: string;
+  walletAddress: string;
+  baseUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VendorRegisterPayload {
+  walletAddress: string;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  authProvider: string;
+  providerSubject: string;
+}
+
+export interface VendorLoginPayload {
+  email: string;
+  phoneNumber: string;
+  authProvider: string;
+  providerSubject: string;
+}
+
+export interface VendorApiResponse {
+  id: string;
+  name?: string;
+  email: string;
+  phone?: string;
+  phoneNumber?: string;
+  walletAddress: string;
+  role?: string;
+  projectId?: string;
+  orgId?: string;
+  isOnline?: boolean;
+}
+
 // ─── Core Data Models ─────────────────────────────────────────────
 
 export type TransactionStatus = 'completed' | 'pending';
@@ -33,6 +86,7 @@ export interface Beneficiary {
 export interface Project {
   id: string;
   name: string;
+  baseUrl: string;
   orgId: string;
   orgName: string;
   tokens: number;

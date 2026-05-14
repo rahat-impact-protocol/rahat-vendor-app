@@ -30,9 +30,9 @@ export const MOCK_ORGANIZATIONS: Organization[] = [
 
 // ─── Mock Projects ─────────────────────────────────────────────────
 export const MOCK_PROJECTS: Project[] = [
-  { id: 'p-001', name: 'Relief Nepal 2025',    orgId: 'org-001', orgName: 'UNICEF Nepal',    tokens: 12325, isActive: true  },
-  { id: 'p-002', name: 'Flood Response Koshi', orgId: 'org-002', orgName: 'Red Cross Nepal', tokens: 8200,  isActive: false },
-  { id: 'p-003', name: 'Earthquake Aid 2024',  orgId: 'org-001', orgName: 'WFP',             tokens: 3100,  isActive: false },
+  { id: 'p-001', name: 'Relief Nepal 2025',    baseUrl: '', orgId: 'org-001', orgName: 'UNICEF Nepal',    tokens: 12325, isActive: true  },
+  { id: 'p-002', name: 'Flood Response Koshi', baseUrl: '', orgId: 'org-002', orgName: 'Red Cross Nepal', tokens: 8200,  isActive: false },
+  { id: 'p-003', name: 'Earthquake Aid 2024',  baseUrl: '', orgId: 'org-001', orgName: 'WFP',             tokens: 3100,  isActive: false },
 ];
 
 // ─── Mock Beneficiaries ────────────────────────────────────────────

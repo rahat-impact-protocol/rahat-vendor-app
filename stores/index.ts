@@ -1,12 +1,17 @@
 import { create } from 'zustand';
-import type { Vendor, Project, Organization } from '@/types';
+import type { Vendor, Project, Organization, GoogleUser } from '@/types';
+import type { GeneratedWallet } from '@/utils/wallet';
 import { MOCK_VENDOR, MOCK_PROJECTS, MOCK_ORGANIZATIONS } from '@/mocks';
 
 interface AuthState {
   isAuthenticated: boolean;
   vendor: Vendor | null;
+  googleUser: GoogleUser | null;
+  wallet: GeneratedWallet | null;
   login: (vendor: Vendor) => void;
   logout: () => void;
+  setGoogleUser: (user: GoogleUser) => void;
+  setWallet: (wallet: GeneratedWallet) => void;
 }
 
 interface ProjectState {
@@ -27,8 +32,12 @@ interface OrgState {
 export const useAuthStore = create<AuthState>(set => ({
   isAuthenticated: false,
   vendor: null,
+  googleUser: null,
+  wallet: null,
   login: (vendor) => set({ isAuthenticated: true, vendor }),
-  logout: () => set({ isAuthenticated: false, vendor: null }),
+  logout: () => set({ isAuthenticated: false, vendor: null, googleUser: null, wallet: null }),
+  setGoogleUser: (user) => set({ googleUser: user }),
+  setWallet: (wallet) => set({ wallet }),
 }));
 
 // ─── Project Store ─────────────────────────────────────────────────
