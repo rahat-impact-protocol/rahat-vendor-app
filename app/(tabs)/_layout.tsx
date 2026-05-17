@@ -1,8 +1,20 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Colors } from '@/constants/tokens';
+import { useAuthStore } from '@/stores';
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const accessToken = useAuthStore(s => s.accessToken);
+  const hasHydrated = useAuthStore(s => s._hasHydrated);
+
+  useEffect(() => {
+    if (hasHydrated && !accessToken) {
+      router.replace('/(auth)/login');
+    }
+  }, [accessToken, hasHydrated]);
+
   return (
     <Tabs
       screenOptions={{

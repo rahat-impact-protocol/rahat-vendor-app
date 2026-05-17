@@ -6,9 +6,11 @@ import type { GeneratedWallet } from "@/utils/wallet";
 import { MOCK_PROJECTS, MOCK_ORGANIZATIONS } from "@/mocks";
 
 interface AuthState {
-  isAuthenticated: boolean;
+  // Persisted
+  accessToken: string | null;
   vendor: Vendor | null;
-  authToken: string | null;
+  mnemonic: string | null;
+  // Transient (not saved to AsyncStorage)
   googleUser: GoogleUser | null;
   wallet: GeneratedWallet | null;
   _hasHydrated: boolean;
@@ -24,6 +26,7 @@ interface ProjectState {
   projects: Project[];
   setActiveProject: (project: Project) => void;
   setProjects: (projects: Project[]) => void;
+  resetProjects: () => void;
 }
 
 interface OrgState {
@@ -31,42 +34,32 @@ interface OrgState {
   organizations: Organization[];
   setActiveOrg: (org: Organization) => void;
   setOrganizations: (orgs: Organization[]) => void;
+  resetOrgs: () => void;
 }
 
 // ─── Auth Store (persisted) ────────────────────────────────────────
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      isAuthenticated: false,
+      accessToken: null,
       vendor: null,
-      authToken: null,
+      mnemonic: null,
       googleUser: null,
       wallet: null,
       _hasHydrated: false,
-      login: (vendor, token) =>
-        set({ isAuthenticated: true, vendor, authToken: token }),
-      logout: () =>
-        set({
-          isAuthenticated: false,
-          vendor: null,
-          authToken: null,
-          googleUser: null,
-          wallet: null,
-        }),
+      login: (vendor, token) => set({ accessToken: token, vendor }),
+      logout: () => set({ accessToken: null, vendor: null, mnemonic: null, googleUser: null, wallet: null }),
       setGoogleUser: (user) => set({ googleUser: user }),
-      setWallet: (wallet) => set({ wallet }),
+      setWallet: (wallet) => set({ wallet, mnemonic: wallet.mnemonic }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
     }),
     {
-      name: "rahat-auth",
+      name: 'rahat-auth',
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist auth state, not transient UI state
       partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
+        accessToken: state.accessToken,
         vendor: state.vendor,
-        authToken: state.authToken,
-        googleUser: state.googleUser,
-        wallet: state.wallet,
+        mnemonic: state.mnemonic,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
@@ -81,6 +74,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   projects: MOCK_PROJECTS,
   setActiveProject: (project) => set({ activeProject: project }),
   setProjects: (projects) => set({ projects }),
+  resetProjects: () => set({ activeProject: null, projects: MOCK_PROJECTS }),
 }));
 
 // ─── Org Store ─────────────────────────────────────────────────────
@@ -89,4 +83,5 @@ export const useOrgStore = create<OrgState>((set) => ({
   organizations: MOCK_ORGANIZATIONS,
   setActiveOrg: (org) => set({ activeOrg: org }),
   setOrganizations: (organizations) => set({ organizations }),
+  resetOrgs: () => set({ activeOrg: MOCK_ORGANIZATIONS[0], organizations: MOCK_ORGANIZATIONS }),
 }));

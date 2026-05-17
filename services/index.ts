@@ -70,7 +70,7 @@ function mapVendor(v: VendorApiResponse): Vendor {
     .join('') || '?';
 
   return {
-    id: v.id,
+    id: String(v.id),
     name: fullName,
     initials,
     email: v.email,
@@ -85,9 +85,8 @@ function mapVendor(v: VendorApiResponse): Vendor {
 
 // ─── Extract vendor + token from auth response ────────────────────
 function parseAuthResponse(data: AuthApiResponse): { vendor: Vendor; token: string } {
-  const token = data.access_token ?? data.token ?? '';
-  // vendor might be nested under data.vendor or spread at top level
-  const vendorData: VendorApiResponse = data.vendor ?? {
+  const token = data.accessToken ?? data.access_token ?? data.token ?? '';
+  const vendorData: VendorApiResponse = data.vendor ?? data.data ?? {
     id: data.id ?? '',
     name: data.name,
     email: data.email ?? '',
@@ -246,14 +245,14 @@ export const vendorService = {
 
 // ─── Redemptions ──────────────────────────────────────────────────
 export const redemptionService = {
-  getRedemptions: async (vendorId: string): Promise<RedemptionRequest[]> => {
+  getRedemptions: async (): Promise<RedemptionRequest[]> => {
     await delay();
-    return MOCK_REDEMPTIONS.filter(r => r.vendorId === vendorId);
+    return MOCK_REDEMPTIONS;
   },
 
-  getStats: async (vendorId: string): Promise<RedemptionStats> => {
+  getStats: async (): Promise<RedemptionStats> => {
     await delay(200);
-    const reqs = MOCK_REDEMPTIONS.filter(r => r.vendorId === vendorId);
+    const reqs = MOCK_REDEMPTIONS;
     return {
       approved: reqs.filter(r => r.status === 'approved').length,
       pending: reqs.filter(r => r.status === 'pending').length,

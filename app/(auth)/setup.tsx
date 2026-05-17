@@ -21,14 +21,17 @@ import type { ApiProject, GoogleUser } from '@/types';
 
 /**
  * Flow:
- *  1. 'projects'   — fetch project list, user selects one, taps "Get Started"
- *  2. 'checking'   — findVendorByEmail at selected project baseUrl
+ *  1. 'wallet-check' — check Google Drive for existing wallet mnemonics
+ *                    → found  → restore wallet + store in AsyncStorage → projects
+ *                    → not found → create new wallet + store in AsyncStorage → projects
+ *  2. 'projects'    — fetch project list, user selects one, taps "Get Started"
+ *  3. 'checking'    — findVendorByEmail at selected project baseUrl
  *                    → found  → loginVendor → save token → navigate
  *                    → not found → show phone-form
- *  3. 'phone-form' — collect name + phone for new vendors
- *  4. 'submitting' — generate wallet, save to Drive, registerVendor → navigate
+ *  4. 'phone-form'  — collect name + phone for new vendors
+ *  5. 'submitting'  — registerVendor with stored wallet address → navigate
  */
-type Step = 'projects' | 'checking' | 'phone-form' | 'submitting';
+type Step = 'wallet-check' | 'projects' | 'checking' | 'phone-form' | 'submitting';
 
 export default function SetupScreen() {
   const router = useRouter();
@@ -36,9 +39,12 @@ export default function SetupScreen() {
 
   const googleUser = useAuthStore(s => s.googleUser);
   const login = useAuthStore(s => s.login);
+  const setWallet = useAuthStore(s => s.setWallet);
+  const storedWallet = useAuthStore(s => s.wallet);
   const setActiveProject = useProjectStore(s => s.setActiveProject);
 
-  const [step, setStep] = React.useState<Step>('projects');
+  const [step, setStep] = React.useState<Step>('wallet-check');
+  const [walletError, setWalletError] = React.useState<string | null>(null);
 
   // Project selection
   const [apiProjects, setApiProjects] = React.useState<ApiProject[]>([]);
@@ -59,10 +65,32 @@ export default function SetupScreen() {
     }
   }, [googleUser]);
 
-  // Fetch project list on mount
+  // Step 1: Check/create wallet immediately after Google sign-in
   React.useEffect(() => {
-    loadProjects();
-  }, []);
+    if (googleUser && step === 'wallet-check') {
+      initializeWallet();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleUser]);
+
+  const initializeWallet = async () => {
+    if (!googleUser?.accessToken) return;
+    setWalletError(null);
+    try {
+      const walletResult = await checkOrCreateWallet(googleUser.accessToken);
+      // Store wallet in AsyncStorage via Zustand persist
+      setWallet({
+        address: walletResult.address,
+        mnemonic: walletResult.mnemonic,
+        privateKey: walletResult.privateKey,
+      });
+      // Kick off project loading in parallel before showing the project list
+      loadProjects();
+      setStep('projects');
+    } catch (err: any) {
+      setWalletError(err?.message ?? 'Failed to initialize wallet. Check your Drive permissions.');
+    }
+  };
 
   const loadProjects = () => {
     let cancelled = false;
@@ -125,18 +153,18 @@ export default function SetupScreen() {
     return Object.keys(next).length === 0;
   };
 
-  // ── Register: generate wallet → save to Drive → POST /vendor ─────
+  // ── Register: use stored wallet → POST /vendor ───────────────────
   const handleRegister = async () => {
     if (!validatePhone() || !googleUser || !selectedProject) return;
+    if (!storedWallet) {
+      Alert.alert('Wallet Error', 'Wallet not initialized. Please go back and try again.');
+      return;
+    }
     setStep('submitting');
 
     try {
-      // Generate wallet and back up to Google Drive
-      const walletResult = await checkOrCreateWallet(googleUser.accessToken!);
-
-      // Register vendor on selected project
       const { vendor, token } = await authService.registerVendor(selectedProject.baseUrl, {
-        walletAddress: walletResult.address,
+        walletAddress: storedWallet.address,
         name: name.trim(),
         phoneNumber: phone.trim(),
         email: googleUser.email,
@@ -171,18 +199,41 @@ export default function SetupScreen() {
 
   if (!googleUser) return null;
 
-  // Loading screens
+  // Wallet check loading / error screen
+  if (step === 'wallet-check') {
+    return (
+      <View style={styles.centeredScreen}>
+        {walletError ? (
+          <>
+            <Text style={styles.errorTitle}>Wallet Error</Text>
+            <Text style={styles.checkingSub}>{walletError}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={initializeWallet}>
+              <Text style={styles.retryBtnText}>Retry</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <ActivityIndicator size="large" color="#1D70B8" />
+            <Text style={styles.checkingText}>Setting up your wallet…</Text>
+            <Text style={styles.checkingSub}>Checking Google Drive for existing wallet</Text>
+          </>
+        )}
+      </View>
+    );
+  }
+
+  // Checking / submitting loading screens
   if (step === 'checking' || step === 'submitting') {
     return (
       <View style={styles.centeredScreen}>
         <ActivityIndicator size="large" color="#1D70B8" />
         <Text style={styles.checkingText}>
-          {step === 'checking' ? 'Checking your account…' : 'Setting up your wallet…'}
+          {step === 'checking' ? 'Checking your account…' : 'Creating your account…'}
         </Text>
         <Text style={styles.checkingSub}>
           {step === 'checking'
             ? 'Verifying with the selected project'
-            : 'Saving wallet backup to Google Drive'}
+            : 'Registering you as a vendor'}
         </Text>
       </View>
     );
@@ -372,6 +423,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
     color: '#1F242A',
+    marginTop: 8,
+  },
+  errorTitle: {
+    fontFamily: 'Manrope',
+    fontWeight: '700',
+    fontSize: 16,
+    color: '#E53935',
     marginTop: 8,
   },
   checkingSub: {

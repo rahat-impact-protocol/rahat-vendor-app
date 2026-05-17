@@ -39,7 +39,8 @@ export interface VendorLoginPayload {
 }
 
 export interface VendorApiResponse {
-  id: string;
+  id: string | number;
+  uuid?: string;
   name?: string;
   email: string;
   phone?: string;
@@ -51,14 +52,12 @@ export interface VendorApiResponse {
   isOnline?: boolean;
 }
 
-/**
- * Response from login / register endpoints.
- * Supports both "access_token at top level" and "nested vendor object" patterns.
- */
 export interface AuthApiResponse {
-  access_token?: string;
+  accessToken?: string;   // camelCase (actual API)
+  access_token?: string;  // snake_case (legacy)
   token?: string;
-  vendor?: VendorApiResponse;
+  data?: VendorApiResponse;   // nested vendor (actual API)
+  vendor?: VendorApiResponse; // nested vendor (legacy)
   // fallback: vendor fields returned at top level
   id?: string;
   email?: string;

@@ -3,10 +3,9 @@ import { View, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '@/stores';
 
 export default function Index() {
-  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const accessToken = useAuthStore(s => s.accessToken);
   const hasHydrated = useAuthStore(s => s._hasHydrated);
 
-  // Wait for AsyncStorage to rehydrate persisted state before redirecting
   if (!hasHydrated) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F6FA' }}>
@@ -15,7 +14,7 @@ export default function Index() {
     );
   }
 
-  return isAuthenticated
+  return accessToken
     ? <Redirect href="/(tabs)" />
     : <Redirect href="/(auth)/login" />;
 }
