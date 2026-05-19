@@ -86,20 +86,6 @@ export default function HomeScreen() {
               </Text>
               <Text style={styles.balanceUnit}> tokens</Text>
             </View>
-
-            {/* <TouchableOpacity
-              onPress={() => router.push("/settings/select-project")}
-              style={styles.switchProjectBtn}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.switchProjectText}>Switch Project</Text>
-              <Icon
-                name="chevron-right"
-                size={13}
-                color="#fff"
-                strokeWidth={2.5}
-              />
-            </TouchableOpacity> */}
           </View>
 
           {/* Quick Actions */}
