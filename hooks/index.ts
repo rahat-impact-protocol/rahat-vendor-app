@@ -1,3 +1,5 @@
+export { useGoogleAuth } from './useGoogleAuth';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   transactionService,
@@ -38,7 +40,7 @@ export const useFindBeneficiary = () => {
 export const useProjects = () =>
   useQuery({
     queryKey: ['projects'],
-    queryFn: () => projectService.getProjects('v-001'),
+    queryFn: () => projectService.getProjects(),
   });
 
 export const useProjectBalance = (projectId: string) =>
@@ -51,13 +53,13 @@ export const useProjectBalance = (projectId: string) =>
 export const useRedemptions = () =>
   useQuery({
     queryKey: ['redemptions'],
-    queryFn: () => redemptionService.getRedemptions('v-001'),
+    queryFn: () => redemptionService.getRedemptions(),
   });
 
 export const useRedemptionStats = () =>
   useQuery({
     queryKey: ['redemption-stats'],
-    queryFn: () => redemptionService.getStats('v-001'),
+    queryFn: () => redemptionService.getStats(),
   });
 
 export const useSubmitRedemption = () => {

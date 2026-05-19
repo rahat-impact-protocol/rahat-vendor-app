@@ -33,9 +33,16 @@ export const Icon: React.FC<IconProps> = ({
     qr: (
       <>
         <Rect x="3" y="3" width="7" height="7" rx="1" {...props} />
+        <Rect x="5" y="5" width="3" height="3" fill={color} stroke="none" />
         <Rect x="14" y="3" width="7" height="7" rx="1" {...props} />
-        <Rect x="14" y="14" width="7" height="7" rx="1" {...props} />
+        <Rect x="16" y="5" width="3" height="3" fill={color} stroke="none" />
         <Rect x="3" y="14" width="7" height="7" rx="1" {...props} />
+        <Rect x="5" y="16" width="3" height="3" fill={color} stroke="none" />
+        <Rect x="14" y="14" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="17" y="14" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="14" y="17" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="17" y="17" width="2" height="2" fill={color} stroke="none" />
+        <Rect x="20" y="20" width="2" height="2" fill={color} stroke="none" />
       </>
     ),
     users: (
@@ -158,6 +165,43 @@ export const Icon: React.FC<IconProps> = ({
         <Path d="M9 9h1a2 2 0 0 1 0 4H9v2h3a2 2 0 0 1 0 4" {...props} />
         <Line x1="12" y1="7" x2="12" y2="9" {...props} />
         <Line x1="12" y1="17" x2="12" y2="19" {...props} />
+      </>
+    ),
+    'arrow-up-right': (
+      <>
+        <Line x1="7" y1="17" x2="17" y2="7" {...props} />
+        <Polyline points="7,7 17,7 17,17" {...props} />
+      </>
+    ),
+    'wifi-off': (
+      <>
+        <Line x1="1" y1="1" x2="23" y2="23" {...props} />
+        <Path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" {...props} />
+        <Path d="M5 12.55a11 11 0 0 1 5.17-2.39" {...props} />
+        <Path d="M10.71 5.05A16 16 0 0 1 22.56 9" {...props} />
+        <Path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" {...props} />
+        <Path d="M8.53 16.11a6 6 0 0 1 6.95 0" {...props} />
+        <Line x1="12" y1="20" x2="12.01" y2="20" {...props} />
+      </>
+    ),
+    zap: <Polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" {...props} />,
+    search: (
+      <>
+        <Circle cx="11" cy="11" r="8" {...props} />
+        <Line x1="21" y1="21" x2="16.65" y2="16.65" {...props} />
+      </>
+    ),
+    'external-link': (
+      <>
+        <Path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" {...props} />
+        <Polyline points="15,3 21,3 21,9" {...props} />
+        <Line x1="10" y1="14" x2="21" y2="3" {...props} />
+      </>
+    ),
+    lock: (
+      <>
+        <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" {...props} />
+        <Path d="M7 11V7a5 5 0 0 1 10 0v4" {...props} />
       </>
     ),
   };

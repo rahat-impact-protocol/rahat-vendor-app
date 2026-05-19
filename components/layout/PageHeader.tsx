@@ -37,9 +37,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <View style={styles.placeholder} />
         )}
 
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
+        {/* Title sits in a pointer-events-none overlay so touches fall through to the buttons */}
+        <View pointerEvents="none" style={styles.titleOverlay}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
 
         <View style={styles.right}>
           {right ?? <View style={styles.placeholder} />}
@@ -67,15 +70,18 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   title: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: 'Manrope',
     fontWeight: '700',
     fontSize: 16,
     color: Colors.textPrimary,
-    pointerEvents: 'none',
+  },
+  titleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   right: {
     marginLeft: 'auto',

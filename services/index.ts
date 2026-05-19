@@ -1,6 +1,6 @@
 /**
- * API Services — placeholder layer for all endpoints.
- * Replace the mock returns with real HTTP calls when backend is ready.
+ * API Services — real HTTP calls to backend.
+ * Base URL is read from EXPO_PUBLIC_API_URL environment variable.
  */
 
 import type {
@@ -11,6 +11,11 @@ import type {
   Vendor,
   RedemptionRequest,
   RedemptionStats,
+  VendorRegisterPayload,
+  VendorLoginPayload,
+  VendorApiResponse,
+  AuthApiResponse,
+  ApiProject,
 } from '@/types';
 
 import {
@@ -22,22 +27,120 @@ import {
   MOCK_REDEMPTIONS,
 } from '@/mocks';
 
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://impact-core-dev.rahat.io';
+const CORE_API_BASE = process.env.EXPO_PUBLIC_CORE_API_URL ?? 'https://impact-core-dev.rahat.io';
+
 const delay = (ms = 400) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ─── HTTP helper ──────────────────────────────────────────────────
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+  baseUrl: string = API_BASE,
+): Promise<T> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
+    ...options,
+  });
+
+  if (!res.ok) {
+    let message = `API error ${res.status}`;
+    try {
+      const body = await res.json();
+      message = body?.message ?? message;
+    } catch {
+      // ignore parse errors
+    }
+    const err = new Error(message) as Error & { status: number };
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json() as Promise<T>;
+}
+
+// ─── Map backend vendor → local Vendor shape ─────────────────────
+function mapVendor(v: VendorApiResponse): Vendor {
+  const fullName = v.name ?? '';
+  const initials = fullName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('') || '?';
+
+  return {
+    id: String(v.id),
+    name: fullName,
+    initials,
+    email: v.email,
+    phone: v.phone ?? v.phoneNumber ?? '',
+    walletAddress: v.walletAddress,
+    role: v.role ?? 'Vendor',
+    activeProjectId: v.projectId ?? '',
+    activeOrgId: v.orgId ?? '',
+    isOnline: v.isOnline ?? true,
+  };
+}
+
+// ─── Extract vendor + token from auth response ────────────────────
+function parseAuthResponse(data: AuthApiResponse): { vendor: Vendor; token: string } {
+  const token = data.accessToken ?? data.access_token ?? data.token ?? '';
+  const vendorData: VendorApiResponse = data.vendor ?? data.data ?? {
+    id: data.id ?? '',
+    name: data.name,
+    email: data.email ?? '',
+    phone: data.phone,
+    phoneNumber: data.phoneNumber,
+    walletAddress: data.walletAddress ?? '',
+    role: data.role,
+    projectId: data.projectId,
+    orgId: data.orgId,
+  };
+  return { vendor: mapVendor(vendorData), token };
+}
 
 // ─── Auth ──────────────────────────────────────────────────────────
 export const authService = {
-  loginWithGoogle: async (): Promise<Vendor> => {
-    await delay(800);
-    return MOCK_VENDOR;
+  /**
+   * GET /vendor/:email
+   * Returns the vendor if registered in the given project, null if not found (404).
+   */
+  findVendorByEmail: async (projectBaseUrl: string, email: string): Promise<VendorApiResponse | null> => {
+    try {
+      return await apiFetch<VendorApiResponse>(`/vendor/email/${encodeURIComponent(email)}`, {}, projectBaseUrl);
+    } catch (err: any) {
+      if (err?.status === 404) return null;
+      throw err;
+    }
+  },
+
+  /**
+   * POST /vendor/login
+   * Logs in an existing vendor on the given project's backend.
+   */
+  loginVendor: async (projectBaseUrl: string, payload: VendorLoginPayload): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>('/vendor/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, projectBaseUrl);
+    return parseAuthResponse(data);
+  },
+
+  /**
+   * POST /vendor
+   * Registers a new vendor on the given project's backend.
+   */
+  registerVendor: async (projectBaseUrl: string, payload: VendorRegisterPayload): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>('/vendor', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, projectBaseUrl);
+    return parseAuthResponse(data);
   },
 
   logout: async (): Promise<void> => {
     await delay(300);
-  },
-
-  getCurrentVendor: async (): Promise<Vendor> => {
-    await delay(200);
-    return MOCK_VENDOR;
   },
 };
 
@@ -86,7 +189,15 @@ export const beneficiaryService = {
 
 // ─── Projects ─────────────────────────────────────────────────────
 export const projectService = {
-  getProjects: async (vendorId: string): Promise<Project[]> => {
+  /**
+   * GET /project
+   * Fetches the list of available projects from the core API.
+   */
+  getProjects: async (): Promise<ApiProject[]> => {
+    return apiFetch<ApiProject[]>('/project', {}, CORE_API_BASE);
+  },
+
+  getProjectsByVendor: async (vendorId: string): Promise<Project[]> => {
     await delay();
     return MOCK_PROJECTS;
   },
@@ -134,14 +245,14 @@ export const vendorService = {
 
 // ─── Redemptions ──────────────────────────────────────────────────
 export const redemptionService = {
-  getRedemptions: async (vendorId: string): Promise<RedemptionRequest[]> => {
+  getRedemptions: async (): Promise<RedemptionRequest[]> => {
     await delay();
-    return MOCK_REDEMPTIONS.filter(r => r.vendorId === vendorId);
+    return MOCK_REDEMPTIONS;
   },
 
-  getStats: async (vendorId: string): Promise<RedemptionStats> => {
+  getStats: async (): Promise<RedemptionStats> => {
     await delay(200);
-    const reqs = MOCK_REDEMPTIONS.filter(r => r.vendorId === vendorId);
+    const reqs = MOCK_REDEMPTIONS;
     return {
       approved: reqs.filter(r => r.status === 'approved').length,
       pending: reqs.filter(r => r.status === 'pending').length,

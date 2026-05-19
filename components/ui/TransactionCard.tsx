@@ -11,24 +11,32 @@ interface TransactionCardProps {
 
 export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
   const { amount, hash, date, mode, status } = transaction;
+
+  const isCompleted = status === 'completed';
+  const iconBg = isCompleted ? '#DCFCE7' : '#FFF3E0';
+  const iconColor = isCompleted ? '#16A34A' : '#E06714';
+
+  const modeLabel = mode === 'online' ? 'Online' : 'Offline';
+  const modeIcon = mode === 'online' ? 'wifi' : 'wifi-off';
+
   return (
     <View style={styles.card}>
-      <View style={styles.iconWrapper}>
-        <Icon name="arrow-lr" size={16} color="#9CA3AF" />
+      <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
+        <Icon name="arrow-up-right" size={16} color={iconColor} strokeWidth={2} />
       </View>
       <View style={styles.content}>
-        <View style={styles.row}>
+        <View style={styles.topRow}>
           <Text style={styles.amount}>{amount}</Text>
           <Badge
-            label={status === 'completed' ? 'Completed' : 'Pending'}
+            label={isCompleted ? 'COMPLETED' : 'PENDING'}
             variant={status}
           />
         </View>
-        <View style={styles.row}>
-          <Text style={styles.hash}>{hash}</Text>
-          <Text style={styles.mode}>{mode}</Text>
+        <Text style={styles.hash}>{hash}</Text>
+        <View style={styles.metaRow}>
+          <Icon name={modeIcon} size={12} color={Colors.textMuted} strokeWidth={1.75} />
+          <Text style={styles.meta}>{modeLabel} • {date}</Text>
         </View>
-        <Text style={styles.date}>{date}</Text>
       </View>
     </View>
   );
@@ -40,7 +48,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    padding: '14px 16px' as any,
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: 'row',
@@ -49,10 +56,9 @@ const styles = StyleSheet.create({
     ...Shadows.card,
   },
   iconWrapper: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -60,17 +66,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     minWidth: 0,
+    gap: 4,
   },
-  row: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
   },
   amount: {
     fontFamily: 'Manrope',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
   },
   hash: {
@@ -78,14 +84,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
   },
-  mode: {
-    fontFamily: 'Manrope',
-    fontSize: 11,
-    color: Colors.textMuted,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  date: {
+  meta: {
     fontFamily: 'Manrope',
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textMuted,
   },
 });
