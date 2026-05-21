@@ -101,6 +101,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="settings" />
               <Stack.Screen name="transactions" />
+              <Stack.Screen name="otp-verify" />
             </Stack>
           </View>
         </SafeAreaProvider>
