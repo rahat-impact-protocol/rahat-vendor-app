@@ -196,7 +196,7 @@ const ft = StyleSheet.create({
 });
 
 // ── Info Row helper ───────────────────────────────────────────────
-const InfoRow: React.FC<{ label: string; value: string }> = ({
+const InfoRow: React.FC<{ label: string; value: string | undefined }> = ({
   label,
   value,
 }) => (
@@ -310,7 +310,10 @@ export default function ChargeScreen() {
         }
       } catch (contractErr: any) {
         // Log the real error so we can diagnose contract call failures
-        console.error('Contract balance fetch failed:', contractErr?.message ?? contractErr);
+        console.error(
+          "Contract balance fetch failed:",
+          contractErr?.message ?? contractErr,
+        );
         tokens = 0;
       }
 
@@ -353,6 +356,20 @@ export default function ChargeScreen() {
       );
       return;
     }
+
+    const amountString = numAmount.toString();
+    console.log(
+      "Creating claim with amount:",
+      typeof amountString,
+      amountString,
+    );
+    console.log(
+      "Beneficiary details:",
+      beneficiary?.beneficiary?.walletAddress,
+    );
+
+    const ben = String(beneficiary?.beneficiary?.walletAddress);
+    console.log("Payload for claim creation:", typeof ben);
     if (!beneficiary?.beneficiary?.walletAddress) {
       Alert.alert("Error", "Beneficiary wallet address is missing.");
       return;
@@ -364,22 +381,24 @@ export default function ChargeScreen() {
         projectBaseUrl,
         vendorId,
         {
-          walletAddress: beneficiary.beneficiary.walletAddress,
-          amount: numAmount,
+          amount: amountString,
+          benAddress: ben,
         },
         token,
       );
+      console.log("Claim created:", claim);
       router.push({
         pathname: "/otp-verify",
         params: {
           claimId: claim.id ?? claim.uuid ?? claim.claimId ?? "",
           phone,
-          amount,
+          amount: amountString,
           beneficiaryName: beneficiary.name ?? "",
           projectName: activeProject?.name ?? "",
         },
       });
     } catch (err: any) {
+      console.error("Claim creation failed:", err);
       Alert.alert("Claim Failed", err?.message ?? "Failed to create claim.");
     } finally {
       setLoading(false);
@@ -536,7 +555,7 @@ export default function ChargeScreen() {
             </Text>
             {beneficiary && (
               <View style={[s.detailCard, { width: "100%", marginTop: 24 }]}>
-                <InfoRow label="Name" value={maskName(beneficiary.name)} />
+                <InfoRow label="Name" value={beneficiary.name} />
                 <InfoRow label="Phone" value={`+977 ${phone}`} />
                 <View style={[ir.row, { borderBottomWidth: 0 }]}>
                   <Text style={ir.label}>Available</Text>
@@ -582,7 +601,7 @@ export default function ChargeScreen() {
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.benName}>{maskName(beneficiary.name)}</Text>
+                <Text style={s.benName}>{beneficiary.name}</Text>
                 <Text style={s.benPhone}>+977 {phone}</Text>
               </View>
               <View style={s.benOnlineBadge}>

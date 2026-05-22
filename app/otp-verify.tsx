@@ -132,7 +132,7 @@ export default function OtpVerifyScreen() {
             </Text>
 
             <View style={s.card}>
-              <InfoRow label="Beneficiary" value={maskName(beneficiaryName ?? "")} />
+              <InfoRow label="Beneficiary" value={beneficiaryName ?? "—"} />
               <InfoRow label="Phone" value={`+977 ${phone}`} />
               <InfoRow label="Amount Charged" value={`${amount} Tokens`} />
               <InfoRow label="Project" value={projectName ?? "—"} />
@@ -341,6 +341,7 @@ const s = StyleSheet.create({
   otpBox: {
     flex: 1,
     height: 52,
+    width: 52,
     textAlign: "center",
     fontFamily: "Manrope",
     fontWeight: "800",

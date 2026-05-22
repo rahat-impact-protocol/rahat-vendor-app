@@ -41,8 +41,8 @@ async function apiFetch<T>(
   baseUrl: string = API_BASE,
 ): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
-    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
     ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
   });
 
   if (!res.ok) {
@@ -58,7 +58,8 @@ async function apiFetch<T>(
     throw err;
   }
 
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : {}) as T;
 }
 
 // ─── Map backend vendor → local Vendor shape ─────────────────────
@@ -374,7 +375,7 @@ export const chargeService = {
   createClaim: async (
     baseUrl: string,
     vendorId: string,
-    payload: { walletAddress: string; amount: number },
+    payload: { amount: string; benAddress: string },
     token: string,
   ): Promise<ClaimCreateResponse> => {
     return apiFetch<ClaimCreateResponse>(
@@ -398,7 +399,7 @@ export const chargeService = {
     token: string,
   ): Promise<OtpVerifyResponse> => {
     return apiFetch<OtpVerifyResponse>(
-      "/vendor/verifyotp",
+      "/vendor/verfiyotp",
       {
         method: "POST",
         body: JSON.stringify(payload),
