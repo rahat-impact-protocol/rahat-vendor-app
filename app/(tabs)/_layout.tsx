@@ -18,6 +18,7 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
+        freezeOnBlur: true,
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#9CA3AF',

@@ -1,49 +1,55 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Icon } from '@/components/ui/Icon';
-import { Badge } from '@/components/ui/Badge';
-import { Colors, Shadows, Radius } from '@/constants/tokens';
 import type { Transaction } from '@/types';
+
+const PRIMARY = '#1A56DB';
+const SUCCESS_BG = '#DCFCE7';
+const SUCCESS_TEXT = '#027A48';
+const PENDING_BG = '#FFF3CD';
+const PENDING_TEXT = '#B54708';
+const TEXT_PRI = '#111827';
+const TEXT_MUTED = '#9CA3AF';
+const BORDER = '#F3F4F6';
+const SURFACE = '#FFFFFF';
 
 interface TransactionCardProps {
   transaction: Transaction;
 }
 
 export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
-  const { amount, hash, date, mode, status } = transaction;
+  const { amount, date, mode, status } = transaction;
 
   const isCompleted = status === 'completed';
-  const iconBg = isCompleted ? '#DCFCE7' : '#FFF3E0';
-  const iconColor = isCompleted ? '#16A34A' : '#E06714';
-
-  const modeLabel = mode === 'online' ? 'Online' : 'Offline';
+  const avatarBg = isCompleted ? '#EFF6FF' : '#FFF7ED';
+  const avatarColor = isCompleted ? PRIMARY : '#EA580C';
   const modeIcon = mode === 'online' ? 'wifi' : 'wifi-off';
-
-  const truncateHash = (hash: string) => {
-  if (!hash) return '';
-
-  return `${hash.slice(0, 15)}.......${hash.slice(-20)}`;
-};
+  const modeLabel = mode === 'online' ? 'Online' : 'Offline';
 
   return (
     <View style={styles.card}>
-      <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
-        <Icon name="arrow-up-right" size={16} color={iconColor} strokeWidth={2} />
+      {/* Avatar icon */}
+      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+        <Icon name="zap" size={18} color={avatarColor} strokeWidth={2} />
       </View>
+
+      {/* Main content */}
       <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={styles.amount}>{amount}</Text>
-          <Badge
-            label={isCompleted ? 'COMPLETED' : 'PENDING'}
-            variant={status}
-          />
-        </View>
-        {/* <Text style={styles.hash}>{hash}</Text> */}
-        <Text style={styles.hash}>{truncateHash(hash)}</Text>
+        <Text style={styles.amount}>
+          {amount}{' '}
+          <Text style={styles.unit}>Tokens</Text>
+        </Text>
         <View style={styles.metaRow}>
-          <Icon name={modeIcon} size={12} color={Colors.textMuted} strokeWidth={1.75} />
-          <Text style={styles.meta}>{modeLabel} • {date}</Text>
+          <Icon name={modeIcon} size={11} color={TEXT_MUTED} strokeWidth={1.75} />
+          <Text style={styles.meta}>{modeLabel} · {date}</Text>
         </View>
+      </View>
+
+      {/* Status badge */}
+      <View style={[styles.badge, isCompleted ? styles.badgeDone : styles.badgePending]}>
+        <Text style={[styles.badgeText, isCompleted ? styles.badgeTextDone : styles.badgeTextPending]}>
+          {isCompleted ? 'Completed' : 'Pending'}
+        </Text>
       </View>
     </View>
   );
@@ -51,21 +57,20 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.card,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: BORDER,
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    ...Shadows.card,
+    gap: 12,
   },
-  iconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -75,21 +80,17 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 4,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   amount: {
     fontFamily: 'Manrope',
     fontWeight: '700',
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: TEXT_PRI,
   },
-  hash: {
+  unit: {
     fontFamily: 'Manrope',
-    fontSize: 12,
-    color: Colors.textMuted,
+    fontWeight: '400',
+    fontSize: 13,
+    color: TEXT_MUTED,
   },
   metaRow: {
     flexDirection: 'row',
@@ -99,6 +100,21 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: 'Manrope',
     fontSize: 12,
-    color: Colors.textMuted,
+    color: TEXT_MUTED,
   },
+  badge: {
+    borderRadius: 100,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    flexShrink: 0,
+  },
+  badgeDone: { backgroundColor: SUCCESS_BG },
+  badgePending: { backgroundColor: PENDING_BG },
+  badgeText: {
+    fontFamily: 'Manrope',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  badgeTextDone: { color: SUCCESS_TEXT },
+  badgeTextPending: { color: PENDING_TEXT },
 });
