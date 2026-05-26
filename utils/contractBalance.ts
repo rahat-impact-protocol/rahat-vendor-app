@@ -17,13 +17,12 @@
  *  on this deployment, so we read the public mapping directly.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ethers } from 'ethers';
-import { FUND_STORAGE_ABI, ERC20_ABI } from './abi';
-import {tokenAbi} from "./tokenabi";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ethers } from "ethers";
+import { FUND_STORAGE_ABI, ERC20_ABI } from "./abi";
+import { tokenAbi } from "./tokenabi";
 
-
-const SETTINGS_KEY = 'rahat-app-settings';
+const SETTINGS_KEY = "rahat-app-settings";
 
 interface BlockchainSetting {
   rpcUrl: string;
@@ -57,70 +56,67 @@ export async function getBeneficiaryOnChainBalance(
   beneficiaryAddress: string,
 ): Promise<number> {
   const raw = await AsyncStorage.getItem(SETTINGS_KEY);
-  if (!raw) throw new Error('Blockchain settings not found in storage.');
+  if (!raw) throw new Error("Blockchain settings not found in storage.");
 
   let settings: AppSettingEntry[];
   try {
     settings = JSON.parse(raw);
   } catch {
-    throw new Error('Failed to parse settings from storage.');
+    throw new Error("Failed to parse settings from storage.");
   }
 
-  const blockchain = findSetting<BlockchainSetting>(settings, 'blockchain');
-  const contract   = findSetting<ContractSetting>(settings, 'contract');
+  const blockchain = findSetting<BlockchainSetting>(settings, "blockchain");
+  const contract = findSetting<ContractSetting>(settings, "contract");
 
-  if (!blockchain?.rpcUrl)                       throw new Error('RPC URL not configured.');
-  if (!contract?.token?.address)                 throw new Error('Token address not configured.');
-  if (!contract?.fundStorageContract?.address)   throw new Error('FundStorage address not configured.');
-  if (!contract?.disbursementContract?.address)  throw new Error('Disbursement contract address not configured.');
+  if (!blockchain?.rpcUrl) throw new Error("RPC URL not configured.");
+  if (!contract?.token?.address)
+    throw new Error("Token address not configured.");
+  if (!contract?.fundStorageContract?.address)
+    throw new Error("FundStorage address not configured.");
+  if (!contract?.disbursementContract?.address)
+    throw new Error("Disbursement contract address not configured.");
 
-  const tokenAddress        = ethers.utils.getAddress(contract.token.address);
+  const tokenAddress = ethers.utils.getAddress(contract.token.address);
   // _projectAddress key used in assignTokensToBeneficiaries calls = fundStorageContract.address
-  const projectKeyAddress   = ethers.utils.getAddress(contract.fundStorageContract.address);
+  const projectKeyAddress = ethers.utils.getAddress(
+    contract.fundStorageContract.address,
+  );
   // The DisbursementContract holds the beneficiaryAssignment mapping
-  const disbursementAddress = ethers.utils.getAddress(contract.disbursementContract.address);
-  const beneficiary         = ethers.utils.getAddress(beneficiaryAddress);
+  const disbursementAddress = ethers.utils.getAddress(
+    contract.disbursementContract.address,
+  );
+  const beneficiary = ethers.utils.getAddress(beneficiaryAddress);
 
-  console.log('Balance lookup:', {
-    disbursementContract: disbursementAddress,
-    projectKey: projectKeyAddress,
-    token: tokenAddress,
-    beneficiary,
-  });
-
-  const provider        = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
-  const disbursement    = new ethers.Contract(disbursementAddress, FUND_STORAGE_ABI, provider);
-  console.log('Disbursement contract instance created:', disbursement.address);
-
-  // ── Primary: beneficiaryAssignment public mapping ────────────────────────────
-  // Direct storage read — no access control, returns 0 if not assigned.
-  // Key order: beneficiaryAssignment[token][fundStorageAddress][beneficiary]
-  // try {
-  //   const balance: ethers.BigNumber = await disbursement.beneficiaryAssignment(
-  //     tokenAddress,
-  //     projectKeyAddress,
-  //     beneficiary,
-  //   );
-  //   console.log('disbursement.beneficiaryAssignment:', balance.toString());
-  //   return balance.toNumber();
-  // } catch (err: any) {
-  //   console.warn('beneficiaryAssignment failed:', err?.code ?? err?.message);
-  // }
+  const provider = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
+  const disbursement = new ethers.Contract(
+    disbursementAddress,
+    FUND_STORAGE_ABI,
+    provider,
+  );
 
   // ── Fallback: ERC20 balanceOf ────────────────────────────────────────────────
   try {
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-    const balance: ethers.BigNumber = await tokenContract.balanceOf(beneficiary);
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ERC20_ABI,
+      provider,
+    );
+    const balance: ethers.BigNumber =
+      await tokenContract.balanceOf(beneficiary);
     let decimals = 18;
-    try { decimals = await tokenContract.decimals(); } catch { /* keep 18 */ }
+    try {
+      decimals = await tokenContract.decimals();
+    } catch {
+      /* keep 18 */
+    }
     const whole = Number(ethers.utils.formatUnits(balance, decimals));
-    console.log('ERC20.balanceOf:', balance.toString(), '→', whole);
+
     return whole;
   } catch (err: any) {
-    console.warn('ERC20.balanceOf failed:', err?.code ?? err?.message);
+    console.warn("ERC20.balanceOf failed:", err?.code ?? err?.message);
   }
 
-  console.error('All balance sources exhausted for', beneficiary);
+  console.error("All balance sources exhausted for", beneficiary);
   return 0;
 }
 
@@ -128,46 +124,48 @@ export async function getVendorOnChainBalance(
   vendorAddress: string,
 ): Promise<number> {
   const raw = await AsyncStorage.getItem(SETTINGS_KEY);
-  if (!raw) throw new Error('Blockchain settings not found in storage.');
-console.log('Raw settings from storage:', raw);
+  if (!raw) throw new Error("Blockchain settings not found in storage.");
+
   let settings: AppSettingEntry[];
   try {
     settings = JSON.parse(raw);
   } catch {
-    throw new Error('Failed to parse settings from storage.');
+    throw new Error("Failed to parse settings from storage.");
   }
 
-  const blockchain = findSetting<BlockchainSetting>(settings, 'blockchain');
-  console.log('Blockchain settings:', blockchain);
-  const contract   = findSetting<ContractSetting>(settings, 'contract');
-  console.log('Contract settings:', contract);
+  const blockchain = findSetting<BlockchainSetting>(settings, "blockchain");
 
-  if (!blockchain?.rpcUrl)                       throw new Error('RPC URL not configured.');
-  if (!contract?.token?.address)                 throw new Error('Token address not configured.');
-  if (!contract?.fundStorageContract?.address)   throw new Error('FundStorage address not configured.');
-  if (!contract?.disbursementContract?.address)  throw new Error('Disbursement contract address not configured.');
+  const contract = findSetting<ContractSetting>(settings, "contract");
 
-  const tokenAddress        = ethers.utils.getAddress(contract.token.address);
-  console.log('Token address:', tokenAddress);
+  if (!blockchain?.rpcUrl) throw new Error("RPC URL not configured.");
+  if (!contract?.token?.address)
+    throw new Error("Token address not configured.");
+  if (!contract?.fundStorageContract?.address)
+    throw new Error("FundStorage address not configured.");
+  if (!contract?.disbursementContract?.address)
+    throw new Error("Disbursement contract address not configured.");
+
+  const tokenAddress = ethers.utils.getAddress(contract.token.address);
+
   // _projectAddress key used in assignTokensToBeneficiaries calls = fundStorageContract.address
-  const projectKeyAddress   = ethers.utils.getAddress(contract.fundStorageContract.address);
-  console.log('Project key address:', projectKeyAddress);
+  const projectKeyAddress = ethers.utils.getAddress(
+    contract.fundStorageContract.address,
+  );
+
   // The DisbursementContract holds the beneficiaryAssignment mapping
-  const disbursementAddress = ethers.utils.getAddress(contract.disbursementContract.address);
-  console.log('Disbursement contract address:', disbursementAddress);
-  const vendor               = ethers.utils.getAddress(vendorAddress);
-  console.log('Vendor address:', vendor);
+  const disbursementAddress = ethers.utils.getAddress(
+    contract.disbursementContract.address,
+  );
 
-  console.log('Balance lookup:', {
-    disbursementContract: disbursementAddress,
-    projectKey: projectKeyAddress,
-    token: tokenAddress,
-    vendor,});
+  const vendor = ethers.utils.getAddress(vendorAddress);
 
-  const provider        = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
-  console.log('JSON RPC provider initialized:', provider.connection.url);
-  const disbursement    = new ethers.Contract(disbursementAddress, FUND_STORAGE_ABI, provider);
-console.log('Disbursement contract instance created:', disbursement.address);
+  const provider = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
+
+  const disbursement = new ethers.Contract(
+    disbursementAddress,
+    FUND_STORAGE_ABI,
+    provider,
+  );
 
   // ── Primary: beneficiaryAssignment public mapping ────────────────────────────
   // Direct storage read — no access control, returns 0 if not assigned.
@@ -178,10 +176,10 @@ console.log('Disbursement contract instance created:', disbursement.address);
       projectKeyAddress,
       vendor,
     );
-    console.log('disbursement.beneficiaryAssignment:', balance.toString());
+
     return balance.toNumber();
   } catch (err: any) {
-    console.warn('beneficiaryAssignment failed:', err?.code ?? err?.message);
+    console.warn("beneficiaryAssignment failed:", err?.code ?? err?.message);
   }
 
   // ── Fallback: ERC20 balanceOf ────────────────────────────────────────────────
@@ -189,14 +187,18 @@ console.log('Disbursement contract instance created:', disbursement.address);
     const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider);
     const balance: ethers.BigNumber = await tokenContract.balanceOf(vendor);
     let decimals = 18;
-    try { decimals = await tokenContract.decimals(); } catch { /* keep 18 */ }
+    try {
+      decimals = await tokenContract.decimals();
+    } catch {
+      /* keep 18 */
+    }
     const whole = Number(ethers.utils.formatUnits(balance, decimals));
-    console.log('ERC20.balanceOf:', balance.toString(), '→', whole);
+
     return whole;
   } catch (err: any) {
-    console.warn('ERC20.balanceOf failed:', err?.code ?? err?.message);
+    console.warn("ERC20.balanceOf failed:", err?.code ?? err?.message);
   }
 
-  console.error('All balance sources exhausted for', vendor);
+  console.error("All balance sources exhausted for", vendor);
   return 0;
 }

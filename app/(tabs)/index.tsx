@@ -31,42 +31,20 @@ export default function HomeScreen() {
 
 const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
 
-  // const [transactionHistory, setTransactionHistory] = useState<
-  //   TransactionApiResponse[]
-  // >([]);
-
-  //   useEffect(() => {
-  //   const fetchTransactions = async () => {
-  //     if (!vendor?.walletAddress || !project?.baseUrl) return;
-  //     try {
-  //       console.log("Fetching transactions...");
-  //       const transactions = await transactionService.getTransaction(
-  //         project.baseUrl,
-  //         vendor.walletAddress,
-  //         token ?? "",
-  //       );
-  //       console.log("Fetched transactions:", transactions);
-  //       setTransactionHistory(transactions); // Now transactions is already the array
-  //     } catch (error) {
-  //       console.error("Failed to fetch transactions:", error);
-  //       setTransactionHistory([]);
-  //     }
-  //   };
-  //   fetchTransactions();
-  // }, [vendor?.walletAddress, project?.baseUrl, token]);
-
   useEffect(() => {
     const fetchTransactions = async () => {
       if (!vendor?.walletAddress || !project?.baseUrl) return;
       try {
-        console.log("Fetching transactions...");
-        const rawTransactions = await transactionService.getTransaction(
+
+        const { data: rawTransactions } = await transactionService.getTransaction(
           project.baseUrl,
           vendor.walletAddress,
           token ?? "",
+          1,
+          5,
         );
-        console.log("Fetched raw transactions:", rawTransactions);
 
+        
         // Map TransactionApiResponse[] to Transaction[] expected by UI
         const mappedTransactions = rawTransactions.map((tx) => ({
           id: tx.transactionHash, // fallback id

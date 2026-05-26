@@ -11,7 +11,7 @@ interface TransactionCardProps {
 
 export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
   const { amount, hash, date, mode, status } = transaction;
-console.log("Rendering TransactionCard with transaction:", transaction);
+
   const isCompleted = status === 'completed';
   const iconBg = isCompleted ? '#DCFCE7' : '#FFF3E0';
   const iconColor = isCompleted ? '#16A34A' : '#E06714';

@@ -76,7 +76,6 @@ export default function ChargeScreen() {
       let tokens = 0;
       try {
         const walletAddress = ben.walletAddress;
-        console.log("Beneficiary wallet address:", walletAddress);
         if (walletAddress) {
           tokens = await getBeneficiaryOnChainBalance(walletAddress);
         }
@@ -88,7 +87,6 @@ export default function ChargeScreen() {
         tokens = 0;
       }
 
-      console.log("Available tokens for beneficiary:", tokens);
       setAvailableTokens(tokens);
       setStep("beneficiary-details");
     } catch (err: any) {
@@ -127,18 +125,9 @@ export default function ChargeScreen() {
     }
 
     const amountString = numAmount.toString();
-    console.log(
-      "Creating claim with amount:",
-      typeof amountString,
-      amountString,
-    );
-    console.log(
-      "Beneficiary details:",
-      beneficiary?.walletAddress,
-    );
+   
 
     const ben = String(beneficiary?.walletAddress);
-    console.log("Payload for claim creation:", typeof ben);
     if (!beneficiary?.walletAddress) {
       Alert.alert("Error", "Beneficiary wallet address is missing.");
       return;
@@ -155,7 +144,6 @@ export default function ChargeScreen() {
         },
         token,
       );
-      console.log("Claim created:", claim);
       router.push({
         pathname: "/otp-verify",
         params: {

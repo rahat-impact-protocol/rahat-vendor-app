@@ -56,14 +56,7 @@ export default function OtpVerifyScreen() {
       projectName: string;
     }>();
 
-  console.log("OTP Verify Params:", {
-    benAddress,
-    vendorId,
-    phone,
-    amount,
-    beneficiaryName,
-    projectName,
-  });
+
   const accessToken = useAuthStore((s) => s.accessToken);
   const activeProject = useProjectStore((s) => s.activeProject);
   const projectBaseUrl = activeProject?.baseUrl ?? "";

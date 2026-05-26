@@ -1,63 +1,116 @@
 import React from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, FlatList,
+  View, Text, StyleSheet, FlatList, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { TransactionCard } from '@/components/ui/TransactionCard';
 import { Colors } from '@/constants/tokens';
-import { MOCK_TRANSACTIONS } from '@/mocks';
+import { transactionService, type TransactionApiResponse } from '@/services';
+import { useAuthStore, useProjectStore } from '@/stores';
 import type { Transaction } from '@/types';
 
-type FilterId = 'all' | 'pending';
+function mapTx(tx: TransactionApiResponse): Transaction {
+  return {
+    id: tx.transactionHash,
+    amount: tx.amount,
+    tokenAmount: Number(tx.amount) || 0,
+    hash: tx.transactionHash,
+    date: new Date(tx.createdAt).toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+    }),
+    mode: (tx.actionType?.toLowerCase() === 'offline' ? 'offline' : 'online') as 'online' | 'offline',
+    status: tx.status?.toLowerCase() === 'completed' ? 'completed' : 'pending',
+    projectId: '',
+  };
+}
 
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all',     label: 'All' },
-  { id: 'pending', label: 'Pending' },
-];
+const PER_PAGE = 15;
 
 export default function TransactionsScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [filter, setFilter] = React.useState<FilterId>('all');
+  const vendor = useAuthStore((s) => s.vendor);
+  const token = useAuthStore((s) => s.accessToken);
+  const project = useProjectStore((s) => s.activeProject);
 
-  const all = MOCK_TRANSACTIONS;
-  const pending = all.filter(t => t.status === 'pending');
-  const shown = filter === 'all' ? all : pending;
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [page, setPage] = React.useState(1);
+  const [hasNextPage, setHasNextPage] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+
+  const fetchPage = React.useCallback(async (pageNum: number, append: boolean) => {
+    if (!vendor?.walletAddress || !project?.baseUrl) return;
+    append ? setLoadingMore(true) : setLoading(true);
+    try {
+      const { data, meta } = await transactionService.getTransaction(
+        project.baseUrl,
+        vendor.walletAddress,
+        token ?? '',
+        pageNum,
+        PER_PAGE,
+      );
+      const mapped = data.map(mapTx);
+      setTransactions((prev) => append ? [...prev, ...mapped] : mapped);
+      setHasNextPage(meta.hasNextPage);
+      setPage(pageNum);
+    } finally {
+      append ? setLoadingMore(false) : setLoading(false);
+    }
+  }, [vendor?.walletAddress, project?.baseUrl, token]);
+
+  React.useEffect(() => {
+    fetchPage(1, false);
+  }, [fetchPage]);
+
+  const loadMore = React.useCallback(() => {
+    if (!hasNextPage || loadingMore) return;
+    fetchPage(page + 1, true);
+  }, [hasNextPage, loadingMore, page, fetchPage]);
+
+  const renderFooter = () => {
+    if (loadingMore) {
+      return (
+        <View style={styles.footerLoader}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+        </View>
+      );
+    }
+    if (!hasNextPage && transactions.length > 0) {
+      return <Text style={styles.endText}>No more transactions</Text>;
+    }
+    return null;
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <PageHeader title="Transactions" showBack />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <PageHeader title="Transactions" showBack />
-
-      {/* Filter tabs */}
-      <View style={styles.filterRow}>
-        {FILTERS.map(f => {
-          const isActive = f.id === filter;
-          const count = f.id === 'all' ? all.length : pending.length;
-          return (
-            <TouchableOpacity
-              key={f.id}
-              onPress={() => setFilter(f.id)}
-              style={[styles.filterTab, isActive && styles.filterTabActive]}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>{f.label}</Text>
-              <View style={[styles.filterBadge, isActive && styles.filterBadgeActive]}>
-                <Text style={[styles.filterBadgeText, isActive && styles.filterBadgeTextActive]}>{count}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
       <FlatList
-        data={shown}
-        keyExtractor={item => item.id}
+        data={transactions}
+        keyExtractor={(item, index) => item.id || String(index)}
         renderItem={({ item }) => <TransactionCard transaction={item} />}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
         showsVerticalScrollIndicator={false}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={
+          <View style={styles.centered}>
+            <Text style={styles.emptyText}>No transactions found</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -65,21 +118,12 @@ export default function TransactionsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
-  filterRow: {
-    flexDirection: 'row', backgroundColor: Colors.surface,
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
-  },
-  filterTab: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 5, paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent',
-    marginBottom: -1,
-  },
-  filterTabActive: { borderBottomColor: Colors.primary },
-  filterLabel: { fontFamily: 'Manrope', fontSize: 13, fontWeight: '500', color: Colors.textMuted },
-  filterLabelActive: { fontWeight: '700', color: Colors.primary },
-  filterBadge: { backgroundColor: '#F3F4F6', borderRadius: 100, paddingHorizontal: 7, paddingVertical: 1 },
-  filterBadgeActive: { backgroundColor: Colors.primary },
-  filterBadgeText: { fontFamily: 'Manrope', fontSize: 11, fontWeight: '700', color: Colors.textMuted },
-  filterBadgeTextActive: { color: '#fff' },
   listContent: { padding: 16, paddingBottom: 32 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyText: { fontFamily: 'Manrope', fontSize: 14, color: Colors.textMuted },
+  footerLoader: { paddingVertical: 20, alignItems: 'center' },
+  endText: {
+    fontFamily: 'Manrope', fontSize: 12, color: Colors.textMuted,
+    textAlign: 'center', paddingVertical: 20,
+  },
 });

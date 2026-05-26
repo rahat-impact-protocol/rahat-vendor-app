@@ -46,19 +46,26 @@ export interface TransactionApiResponse {
   actionType: string;
 }
 
+export interface TransactionMeta {
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedTransactions {
+  data: TransactionApiResponse[];
+  meta: TransactionMeta;
+}
+
 // Add this interface for the full API response
 interface TransactionApiFullResponse {
   response: {
     response: {
       data: TransactionApiResponse[];
-      meta: {
-        total: number;
-        page: number;
-        perPage: number;
-        totalPages: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-      };
+      meta: TransactionMeta;
     };
     error: null | string;
   };
@@ -240,7 +247,7 @@ export const transactionService = {
     token: string,
     page: number = 1,
     perPage: number = 10,
-  ): Promise<TransactionApiResponse[]> => {
+  ): Promise<PaginatedTransactions> => {
     try {
       const response = await apiFetch<TransactionApiFullResponse>(
         `/vendor/transaction/${encodeURIComponent(vendorAddress)}?page=${page}&perPage=${perPage}`,
@@ -248,13 +255,14 @@ export const transactionService = {
         baseUrl,
       );
 
-      // Extract the data array from the nested response
-      const transactions = response?.response?.response?.data || [];
-      console.log("Fetched transactions12:", transactions);
-      return transactions;
+      const inner = response?.response?.response;
+      return {
+        data: inner?.data ?? [],
+        meta: inner?.meta ?? { total: 0, page, perPage, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+      };
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
-      return []; // Return empty array on error
+      return { data: [], meta: { total: 0, page, perPage, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
     }
   },
 
