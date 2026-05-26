@@ -34,6 +34,61 @@ const CORE_API_BASE =
 
 const delay = (ms = 400) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ─── Charge / Claim ───────────────────────────────────────────────
+
+export interface TransactionApiResponse {
+  vendorAddress: string;
+  status: string;
+  tokenAddress: string;
+  amount: string;
+  transactionHash: string;
+  createdAt: string;
+  actionType: string;
+}
+
+// Add this interface for the full API response
+interface TransactionApiFullResponse {
+  response: {
+    response: {
+      data: TransactionApiResponse[];
+      meta: {
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    };
+    error: null | string;
+  };
+  error: null | string;
+}
+
+export interface BeneficiaryApiResponse {
+  uuid?: string;
+  name?: string;
+  phone?: string;
+  walletAddress: string;
+}
+
+export interface ClaimCreateResponse {
+  id?: string;
+  uuid?: string;
+  claimId?: string;
+  message?: string;
+}
+
+export interface OtpVerifyResponse {
+  success?: boolean;
+  txHash?: string;
+  message?: string;
+}
+
+function authHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
 // ─── HTTP helper ──────────────────────────────────────────────────
 async function apiFetch<T>(
   path: string,
@@ -179,6 +234,30 @@ export const authService = {
 
 // ─── Transactions ─────────────────────────────────────────────────
 export const transactionService = {
+  getTransaction: async (
+    baseUrl: string,
+    vendorAddress: string,
+    token: string,
+    page: number = 1,
+    perPage: number = 10,
+  ): Promise<TransactionApiResponse[]> => {
+    try {
+      const response = await apiFetch<TransactionApiFullResponse>(
+        `/vendor/transaction/${encodeURIComponent(vendorAddress)}?page=${page}&perPage=${perPage}`,
+        { headers: authHeader(token) },
+        baseUrl,
+      );
+
+      // Extract the data array from the nested response
+      const transactions = response?.response?.response?.data || [];
+      console.log("Fetched transactions12:", transactions);
+      return transactions;
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+      return []; // Return empty array on error
+    }
+  },
+
   getTransactions: async (projectId: string): Promise<Transaction[]> => {
     await delay();
     return MOCK_TRANSACTIONS.filter((t) => t.projectId === projectId);
@@ -323,34 +402,6 @@ export const redemptionService = {
   },
 };
 
-// ─── Charge / Claim ───────────────────────────────────────────────
-
-export interface BeneficiaryApiResponse {
-  uuid?: string;
-  name?: string;
-  phone?: string;
-  beneficiary: {
-    walletAddress: string;
-  };
-}
-
-export interface ClaimCreateResponse {
-  id?: string;
-  uuid?: string;
-  claimId?: string;
-  message?: string;
-}
-
-export interface OtpVerifyResponse {
-  success?: boolean;
-  txHash?: string;
-  message?: string;
-}
-
-function authHeader(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}` };
-}
-
 export const chargeService = {
   /**
    * GET {baseUrl}/beneficiaries/phoneNumber/:phone
@@ -396,7 +447,7 @@ export const chargeService = {
   verifyOtp: async (
     baseUrl: string,
     vendorId: string,
-    payload: { benAddress: string; otp: string; },
+    payload: { benAddress: string; otp: string },
     token: string,
   ): Promise<OtpVerifyResponse> => {
     return apiFetch<OtpVerifyResponse>(

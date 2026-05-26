@@ -90,21 +90,22 @@ export async function getBeneficiaryOnChainBalance(
 
   const provider        = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
   const disbursement    = new ethers.Contract(disbursementAddress, FUND_STORAGE_ABI, provider);
+  console.log('Disbursement contract instance created:', disbursement.address);
 
   // ── Primary: beneficiaryAssignment public mapping ────────────────────────────
   // Direct storage read — no access control, returns 0 if not assigned.
   // Key order: beneficiaryAssignment[token][fundStorageAddress][beneficiary]
-  try {
-    const balance: ethers.BigNumber = await disbursement.beneficiaryAssignment(
-      tokenAddress,
-      projectKeyAddress,
-      beneficiary,
-    );
-    console.log('disbursement.beneficiaryAssignment:', balance.toString());
-    return balance.toNumber();
-  } catch (err: any) {
-    console.warn('beneficiaryAssignment failed:', err?.code ?? err?.message);
-  }
+  // try {
+  //   const balance: ethers.BigNumber = await disbursement.beneficiaryAssignment(
+  //     tokenAddress,
+  //     projectKeyAddress,
+  //     beneficiary,
+  //   );
+  //   console.log('disbursement.beneficiaryAssignment:', balance.toString());
+  //   return balance.toNumber();
+  // } catch (err: any) {
+  //   console.warn('beneficiaryAssignment failed:', err?.code ?? err?.message);
+  // }
 
   // ── Fallback: ERC20 balanceOf ────────────────────────────────────────────────
   try {
@@ -128,7 +129,7 @@ export async function getVendorOnChainBalance(
 ): Promise<number> {
   const raw = await AsyncStorage.getItem(SETTINGS_KEY);
   if (!raw) throw new Error('Blockchain settings not found in storage.');
-
+console.log('Raw settings from storage:', raw);
   let settings: AppSettingEntry[];
   try {
     settings = JSON.parse(raw);
@@ -137,7 +138,9 @@ export async function getVendorOnChainBalance(
   }
 
   const blockchain = findSetting<BlockchainSetting>(settings, 'blockchain');
+  console.log('Blockchain settings:', blockchain);
   const contract   = findSetting<ContractSetting>(settings, 'contract');
+  console.log('Contract settings:', contract);
 
   if (!blockchain?.rpcUrl)                       throw new Error('RPC URL not configured.');
   if (!contract?.token?.address)                 throw new Error('Token address not configured.');
@@ -145,11 +148,15 @@ export async function getVendorOnChainBalance(
   if (!contract?.disbursementContract?.address)  throw new Error('Disbursement contract address not configured.');
 
   const tokenAddress        = ethers.utils.getAddress(contract.token.address);
+  console.log('Token address:', tokenAddress);
   // _projectAddress key used in assignTokensToBeneficiaries calls = fundStorageContract.address
   const projectKeyAddress   = ethers.utils.getAddress(contract.fundStorageContract.address);
+  console.log('Project key address:', projectKeyAddress);
   // The DisbursementContract holds the beneficiaryAssignment mapping
   const disbursementAddress = ethers.utils.getAddress(contract.disbursementContract.address);
+  console.log('Disbursement contract address:', disbursementAddress);
   const vendor               = ethers.utils.getAddress(vendorAddress);
+  console.log('Vendor address:', vendor);
 
   console.log('Balance lookup:', {
     disbursementContract: disbursementAddress,
@@ -158,7 +165,9 @@ export async function getVendorOnChainBalance(
     vendor,});
 
   const provider        = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
+  console.log('JSON RPC provider initialized:', provider.connection.url);
   const disbursement    = new ethers.Contract(disbursementAddress, FUND_STORAGE_ABI, provider);
+console.log('Disbursement contract instance created:', disbursement.address);
 
   // ── Primary: beneficiaryAssignment public mapping ────────────────────────────
   // Direct storage read — no access control, returns 0 if not assigned.
@@ -177,7 +186,7 @@ export async function getVendorOnChainBalance(
 
   // ── Fallback: ERC20 balanceOf ────────────────────────────────────────────────
   try {
-    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider);
     const balance: ethers.BigNumber = await tokenContract.balanceOf(vendor);
     let decimals = 18;
     try { decimals = await tokenContract.decimals(); } catch { /* keep 18 */ }

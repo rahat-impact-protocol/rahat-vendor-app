@@ -11,13 +11,19 @@ interface TransactionCardProps {
 
 export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
   const { amount, hash, date, mode, status } = transaction;
-
+console.log("Rendering TransactionCard with transaction:", transaction);
   const isCompleted = status === 'completed';
   const iconBg = isCompleted ? '#DCFCE7' : '#FFF3E0';
   const iconColor = isCompleted ? '#16A34A' : '#E06714';
 
   const modeLabel = mode === 'online' ? 'Online' : 'Offline';
   const modeIcon = mode === 'online' ? 'wifi' : 'wifi-off';
+
+  const truncateHash = (hash: string) => {
+  if (!hash) return '';
+
+  return `${hash.slice(0, 15)}.......${hash.slice(-20)}`;
+};
 
   return (
     <View style={styles.card}>
@@ -32,7 +38,8 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
             variant={status}
           />
         </View>
-        <Text style={styles.hash}>{hash}</Text>
+        {/* <Text style={styles.hash}>{hash}</Text> */}
+        <Text style={styles.hash}>{truncateHash(hash)}</Text>
         <View style={styles.metaRow}>
           <Icon name={modeIcon} size={12} color={Colors.textMuted} strokeWidth={1.75} />
           <Text style={styles.meta}>{modeLabel} • {date}</Text>

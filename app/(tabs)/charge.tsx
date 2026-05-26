@@ -75,7 +75,7 @@ export default function ChargeScreen() {
 
       let tokens = 0;
       try {
-        const walletAddress = ben.beneficiary?.walletAddress;
+        const walletAddress = ben.walletAddress;
         console.log("Beneficiary wallet address:", walletAddress);
         if (walletAddress) {
           tokens = await getBeneficiaryOnChainBalance(walletAddress);
@@ -134,12 +134,12 @@ export default function ChargeScreen() {
     );
     console.log(
       "Beneficiary details:",
-      beneficiary?.beneficiary?.walletAddress,
+      beneficiary?.walletAddress,
     );
 
-    const ben = String(beneficiary?.beneficiary?.walletAddress);
+    const ben = String(beneficiary?.walletAddress);
     console.log("Payload for claim creation:", typeof ben);
-    if (!beneficiary?.beneficiary?.walletAddress) {
+    if (!beneficiary?.walletAddress) {
       Alert.alert("Error", "Beneficiary wallet address is missing.");
       return;
     }

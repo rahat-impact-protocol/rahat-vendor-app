@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,121 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
 import { TransactionCard } from "@/components/ui/TransactionCard";
-import { Colors, Radius, Shadows } from "@/constants/tokens";
+// import { Colors, Radius, Shadows } from "@/constants/tokens";
 import { useAuthStore, useProjectStore, useOrgStore } from "@/stores";
-import { MOCK_TRANSACTIONS } from "@/mocks";
+// import { MOCK_TRANSACTIONS } from "@/mocks";
 import { getVendorOnChainBalance } from "@/utils/contractBalance";
+// import { useQueryClient } from "@tanstack/react-query";
+import { transactionService } from "@/services";
+// import type { TransactionApiResponse } from "@/services/index";
+ import type { Transaction } from "@/types";
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const vendor = useAuthStore((s) => s.vendor);
+  const token = useAuthStore((s) => s.accessToken);
   const project = useProjectStore((s) => s.activeProject);
   const org = useOrgStore((s) => s.activeOrg);
 
-  const recentTx = MOCK_TRANSACTIONS.slice(0, 3);
+  // Adjust this import path to your actual types file
+
+const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
+
+  // const [transactionHistory, setTransactionHistory] = useState<
+  //   TransactionApiResponse[]
+  // >([]);
+
+  //   useEffect(() => {
+  //   const fetchTransactions = async () => {
+  //     if (!vendor?.walletAddress || !project?.baseUrl) return;
+  //     try {
+  //       console.log("Fetching transactions...");
+  //       const transactions = await transactionService.getTransaction(
+  //         project.baseUrl,
+  //         vendor.walletAddress,
+  //         token ?? "",
+  //       );
+  //       console.log("Fetched transactions:", transactions);
+  //       setTransactionHistory(transactions); // Now transactions is already the array
+  //     } catch (error) {
+  //       console.error("Failed to fetch transactions:", error);
+  //       setTransactionHistory([]);
+  //     }
+  //   };
+  //   fetchTransactions();
+  // }, [vendor?.walletAddress, project?.baseUrl, token]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!vendor?.walletAddress || !project?.baseUrl) return;
+      try {
+        console.log("Fetching transactions...");
+        const rawTransactions = await transactionService.getTransaction(
+          project.baseUrl,
+          vendor.walletAddress,
+          token ?? "",
+        );
+        console.log("Fetched raw transactions:", rawTransactions);
+
+        // Map TransactionApiResponse[] to Transaction[] expected by UI
+        const mappedTransactions = rawTransactions.map((tx) => ({
+          id: tx.transactionHash, // fallback id
+          amount: tx.amount,
+          hash: tx.transactionHash,
+          date: new Date(tx.createdAt).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+          mode: (tx.actionType?.toLowerCase() === "offline"
+            ? "offline"
+            : "online") as "online" | "offline",
+          status:
+            tx.status?.toLowerCase() === "completed" ? "completed" : "pending",
+        }));
+
+        // @ts-ignore (If state hook type hasn't been re-typed to any[] or Transaction[])
+        setTransactionHistory(mappedTransactions);
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+        setTransactionHistory([]);
+      }
+    };
+    fetchTransactions();
+  }, [vendor?.walletAddress, project?.baseUrl, token]);
+  const [vendorBalance, setVendorBalance] = React.useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = React.useState(false);
+
+  const fetchVendorBalance = React.useCallback(async () => {
+    if (!vendor?.walletAddress) return;
+    setBalanceLoading(true);
+    try {
+      const bal = await getVendorOnChainBalance(vendor.walletAddress);
+      setVendorBalance(bal);
+    } catch (e) {
+      setVendorBalance(null);
+    } finally {
+      setBalanceLoading(false);
+    }
+  }, [vendor?.walletAddress]);
+
+  React.useEffect(() => {
+    fetchVendorBalance();
+  }, [fetchVendorBalance]);
+
+  // Expose refresh for other screens (e.g., after charge)
+  React.useEffect(() => {
+    // @ts-ignore
+    global.refreshVendorBalance = fetchVendorBalance;
+    return () => {
+      // @ts-ignore
+      delete global.refreshVendorBalance;
+    };
+  }, [fetchVendorBalance]);
+
+  // const recentTx = MOCK_TRANSACTIONS.slice(0, 3);
+
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
@@ -82,9 +184,7 @@ export default function HomeScreen() {
           <View style={styles.balanceRow}>
             {/* Wrap the text elements together so they stay on the left */}
             <View style={styles.balanceTextGroup}>
-              <Text style={styles.balanceAmount}>
-                {(project?.tokens ?? 1250).toLocaleString()}
-              </Text>
+              <Text style={styles.balanceAmount}>{vendorBalance}</Text>
               <Text style={styles.balanceUnit}> tokens</Text>
             </View>
           </View>
@@ -137,8 +237,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.txList}>
-            {recentTx.map((tx) => (
-              <TransactionCard key={tx.id} transaction={tx} />
+            {transactionHistory.map((transaction, index) => (
+              <TransactionCard key={index} transaction={transaction} />
             ))}
           </View>
         </View>
@@ -147,10 +247,10 @@ export default function HomeScreen() {
   );
 }
 
-const HERO_COLOR = "#1A56DB";//7461D6";
+const HERO_COLOR = "#1A56DB"; //7461D6";
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F7F9FC" },//#1A56DB
+  screen: { flex: 1, backgroundColor: "#F7F9FC" }, //#1A56DB
   hero: {
     backgroundColor: HERO_COLOR,
     paddingHorizontal: 20,
