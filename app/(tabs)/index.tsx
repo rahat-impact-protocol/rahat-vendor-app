@@ -13,6 +13,7 @@ import { TransactionCard } from "@/components/ui/TransactionCard";
 import { Colors, Radius, Shadows } from "@/constants/tokens";
 import { useAuthStore, useProjectStore, useOrgStore } from "@/stores";
 import { MOCK_TRANSACTIONS } from "@/mocks";
+import { getVendorOnChainBalance } from "@/utils/contractBalance";
 
 export default function HomeScreen() {
   const router = useRouter();

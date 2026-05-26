@@ -395,11 +395,12 @@ export const chargeService = {
    */
   verifyOtp: async (
     baseUrl: string,
-    payload: { otp: string; claimId?: string },
+    vendorId: string,
+    payload: { benAddress: string; otp: string; },
     token: string,
   ): Promise<OtpVerifyResponse> => {
     return apiFetch<OtpVerifyResponse>(
-      "/vendor/verfiyotp",
+      `/vendor/verifyotp/${encodeURIComponent(vendorId)}`,
       {
         method: "POST",
         body: JSON.stringify(payload),
