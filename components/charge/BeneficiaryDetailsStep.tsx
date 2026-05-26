@@ -72,8 +72,8 @@ export const BeneficiaryDetailsStep: React.FC<Props> = ({
         <InfoRow
           label="Wallet"
           value={
-            beneficiary.beneficiary?.walletAddress
-              ? `${beneficiary.beneficiary.walletAddress.slice(0, 8)}...${beneficiary.beneficiary.walletAddress.slice(-6)}`
+            beneficiary.walletAddress
+              ? `${beneficiary.walletAddress.slice(0, 8)}...${beneficiary.walletAddress.slice(-6)}`
               : "—"
           }
         />

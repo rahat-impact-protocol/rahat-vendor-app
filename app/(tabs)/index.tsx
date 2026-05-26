@@ -26,6 +26,7 @@ export default function HomeScreen() {
   const token = useAuthStore((s) => s.accessToken);
   const project = useProjectStore((s) => s.activeProject);
   const org = useOrgStore((s) => s.activeOrg);
+console.log("vendor", vendor);
 
   // Adjust this import path to your actual types file
 
@@ -71,11 +72,13 @@ const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
     };
     fetchTransactions();
   }, [vendor?.walletAddress, project?.baseUrl, token]);
+
   const [vendorBalance, setVendorBalance] = React.useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = React.useState(false);
 
   const fetchVendorBalance = React.useCallback(async () => {
     if (!vendor?.walletAddress) return;
+    console.log("Fetching on-chain balance for vendor:", vendor.walletAddress);
     setBalanceLoading(true);
     try {
       const bal = await getVendorOnChainBalance(vendor.walletAddress);
