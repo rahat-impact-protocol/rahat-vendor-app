@@ -78,8 +78,10 @@ export default function HomeScreen() {
     setBalanceLoading(true);
     try {
       const bal = await getVendorOnChainBalance(vendor.walletAddress);
+      console.log("On-chain balance fetched:", bal);
       setVendorBalance(bal);
     } catch (e) {
+      console.error("Failed to fetch on-chain balance:", e);
       setVendorBalance(null);
     } finally {
       setBalanceLoading(false);
