@@ -15,14 +15,21 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "io.rahat.vendor"
+      "bundleIdentifier": "io.rahat.vendor",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#297AD6"
       },
-      "package": "io.rahat.vendor"
+      "package": "io.rahat.vendor",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -37,6 +44,12 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to scan QR codes for beneficiary verification."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "47473a85-2b5e-4f2a-8707-598d6eb29c8a"
+      }
+    }
   }
 }
