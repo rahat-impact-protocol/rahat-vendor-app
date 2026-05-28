@@ -16,13 +16,17 @@ function mapTx(tx: TransactionApiResponse): Transaction {
     amount: tx.amount,
     tokenAmount: Number(tx.amount) || 0,
     hash: tx.transactionHash,
-    date: new Date(tx.createdAt).toLocaleDateString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric',
-    }),
-    // mode: (tx.actionType?.toLowerCase() === 'offline' ? 'offline' : 'online') as 'online' | 'offline',
+    actionType: tx.actionType ?? "Transaction",
+    mode: tx.actionType?.toLowerCase() === "offline" ? "offline" : "online",
     status: tx.status,
-    // ?.toLowerCase() === 'completed' ? 'completed' : 'pending',
-    projectId: '',
+    date: new Date(tx.createdAt).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    projectId: "",
   };
 }
 

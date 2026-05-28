@@ -10,13 +10,9 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
 import { TransactionCard } from "@/components/ui/TransactionCard";
-// import { Colors, Radius, Shadows } from "@/constants/tokens";
 import { useAuthStore, useProjectStore, useOrgStore } from "@/stores";
-// import { MOCK_TRANSACTIONS } from "@/mocks";
 import { getVendorOnChainBalance } from "@/utils/contractBalance";
-// import { useQueryClient } from "@tanstack/react-query";
 import { transactionService } from "@/services";
-// import type { TransactionApiResponse } from "@/services/index";
 import type { Transaction } from "@/types";
 
 export default function HomeScreen() {
