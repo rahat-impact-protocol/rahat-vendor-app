@@ -8,6 +8,7 @@ export const phoneSchema = z
 
 export type Step =
   | "phone-input"
+  | "qr-scan"  
   | "beneficiary-details"
   | "no-beneficiary"
   | "no-token"
@@ -28,6 +29,7 @@ export const SUCCESS_COLOR = "#059669";
 
 export const STEP_NUMBERS: Record<Step, number> = {
   "phone-input": 1,
+  "qr-scan": 1,
   "no-beneficiary": 1,
   "beneficiary-details": 2,
   "no-token": 2,

@@ -36,6 +36,7 @@ type Props = {
   activeProject: ActiveProject;
   handleFindBeneficiary: () => void;
   validatePhone: (v: string) => boolean;
+  onQRPress: () => void;
 };
 
 export const PhoneInputStep: React.FC<Props> = ({
@@ -46,6 +47,7 @@ export const PhoneInputStep: React.FC<Props> = ({
   activeProject,
   handleFindBeneficiary,
   validatePhone,
+  onQRPress,
 }) => (
   <View style={shared.whiteSheet}>
     <KeyboardAvoidingView
@@ -139,6 +141,7 @@ export const PhoneInputStep: React.FC<Props> = ({
               key={label}
               style={s.altMethod}
               activeOpacity={0.75}
+              onPress={icon === "qr" ? onQRPress : undefined}
             >
               <View style={s.altIcon}>
                 <Icon name={icon} size={20} color={PURPLE} />

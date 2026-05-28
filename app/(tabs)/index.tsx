@@ -17,7 +17,7 @@ import { getVendorOnChainBalance } from "@/utils/contractBalance";
 // import { useQueryClient } from "@tanstack/react-query";
 import { transactionService } from "@/services";
 // import type { TransactionApiResponse } from "@/services/index";
- import type { Transaction } from "@/types";
+import type { Transaction } from "@/types";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -26,41 +26,41 @@ export default function HomeScreen() {
   const token = useAuthStore((s) => s.accessToken);
   const project = useProjectStore((s) => s.activeProject);
   const org = useOrgStore((s) => s.activeOrg);
-console.log("vendor", vendor);
+  console.log("vendor", vendor);
 
   // Adjust this import path to your actual types file
 
-const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
+  const [transactionHistory, setTransactionHistory] = useState<Transaction[]>(
+    [],
+  );
 
   useEffect(() => {
     const fetchTransactions = async () => {
       if (!vendor?.walletAddress || !project?.baseUrl) return;
       try {
+        const { data: rawTransactions } =
+          await transactionService.getTransaction(
+            project.baseUrl,
+            vendor.walletAddress,
+            token ?? "",
+            1,
+            5,
+          );
 
-        const { data: rawTransactions } = await transactionService.getTransaction(
-          project.baseUrl,
-          vendor.walletAddress,
-          token ?? "",
-          1,
-          5,
-        );
-
-        
         // Map TransactionApiResponse[] to Transaction[] expected by UI
         const mappedTransactions = rawTransactions.map((tx) => ({
           id: tx.transactionHash, // fallback id
           amount: tx.amount,
           hash: tx.transactionHash,
-          date: new Date(tx.createdAt).toLocaleDateString(undefined, {
+          actionType: tx.actionType,
+          status: tx.status,
+          date: new Date(tx.createdAt).toLocaleString(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
           }),
-          mode: (tx.actionType?.toLowerCase() === "offline"
-            ? "offline"
-            : "online") as "online" | "offline",
-          status:
-            tx.status?.toLowerCase() === "completed" ? "completed" : "pending",
         }));
 
         // @ts-ignore (If state hook type hasn't been re-typed to any[] or Transaction[])

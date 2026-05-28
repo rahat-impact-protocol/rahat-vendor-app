@@ -30,19 +30,6 @@ const BG_LIGHT = "#F9FAFB";
 const ERROR_COLOR = "#DC2626";
 const SUCCESS_COLOR = "#059669";
 
-// function maskName(name: string): string {
-//   if (!name) return "—";
-//   return name
-//     .trim()
-//     .split(" ")
-//     .map((w) =>
-//       w.length <= 2
-//         ? w
-//         : `${w[0]}${"*".repeat(w.length - 2)}${w[w.length - 1]}`,
-//     )
-//     .join(" ");
-// }
-
 export default function OtpVerifyScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();

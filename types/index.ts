@@ -94,6 +94,7 @@ export interface Transaction {
   date: string;
   mode: TransactionMode;
   status: TransactionStatus;
+  actionType: string;
   beneficiaryPhone?: string;
   beneficiaryName?: string;
   projectId: string;

@@ -14,6 +14,7 @@ import { BeneficiaryDetailsStep } from "@/components/charge/BeneficiaryDetailsSt
 import { NoBeneficiaryStep } from "@/components/charge/NoBeneficiaryStep";
 import { NoTokenStep } from "@/components/charge/NoTokenStep";
 import { AmountStep } from "@/components/charge/AmountStep";
+import { QRScannerStep } from "@/components/charge/QRScannerStep";
 
 export default function ChargeScreen() {
   const insets = useSafeAreaInsets();
@@ -125,7 +126,6 @@ export default function ChargeScreen() {
     }
 
     const amountString = numAmount.toString();
-   
 
     const ben = String(beneficiary?.walletAddress);
     if (!beneficiary?.walletAddress) {
@@ -148,7 +148,7 @@ export default function ChargeScreen() {
         pathname: "/otp-verify",
         params: {
           benAddress: ben,
-           vendorId,
+          vendorId,
           // claimId: claim.id ?? claim.uuid ?? claim.claimId ?? "",
           phone,
           amount: amountString,
@@ -164,18 +164,87 @@ export default function ChargeScreen() {
     }
   };
 
-  // const maskName = (name?: string): string => {
-  //   if (!name) return "—";
-  //   return name
-  //     .trim()
-  //     .split(" ")
-  //     .map((w) =>
-  //       w.length <= 2
-  //         ? w
-  //         : `${w[0]}${"*".repeat(w.length - 2)}${w[w.length - 1]}`,
-  //     )
-  //     .join(" ");
-  // };
+  const handleQRScanned = async (walletAddress: string) => {
+    if (!projectBaseUrl) {
+      Alert.alert("No Active Project", "Please select a project first.");
+      return;
+    }
+    if (!walletAddress) return;
+
+    Keyboard.dismiss();
+    setLoading(true);
+    try {
+      const ben = await chargeService.getBeneficiaryByWallet(
+        projectBaseUrl,
+        walletAddress,
+        token,
+      );
+      setBeneficiary(ben);
+      let tokens = 0;
+      try {
+        const walletAddress = ben.walletAddress;
+        if (walletAddress) {
+          tokens = await getBeneficiaryOnChainBalance(walletAddress);
+        }
+      } catch (contractErr: any) {
+        console.error(
+          "Contract balance fetch failed:",
+          contractErr?.message ?? contractErr,
+        );
+        tokens = 0;
+      }
+
+      setAvailableTokens(tokens);
+      setStep("beneficiary-details");
+    } catch (err: any) {
+      if (
+        err?.status === 404 ||
+        err?.message?.toLowerCase().includes("not found")
+      ) {
+        setStep("no-beneficiary");
+      } else {
+        Alert.alert("Error", err?.message ?? "Failed to find beneficiary.");
+      }
+    } finally {
+      setLoading(false);
+    }
+
+    // console.log("Scanned wallet address test 32:", walletAddress);
+    // setLoading(true);
+    // try {
+    //   // POST wallet address to /qrdata endpoint
+    //   const response = await fetch(`${projectBaseUrl}/qrdata`, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //     body: JSON.stringify({ walletAddress }),
+    //   });
+
+    //   if (!response.ok) throw new Error("QR data endpoint failed");
+
+    //   const ben = await response.json();
+    //   setBeneficiary(ben);
+
+    //   let tokens = 0;
+    //   try {
+    //     if (ben.walletAddress) {
+    //       tokens = await getBeneficiaryOnChainBalance(ben.walletAddress);
+    //     }
+    //   } catch {
+    //     tokens = 0;
+    //   }
+
+    //   setAvailableTokens(tokens);
+    //   setStep("beneficiary-details");
+    // } catch (err: any) {
+    //   Alert.alert("Error", err?.message ?? "Failed to process QR code.");
+    //   setStep("phone-input");
+    // } finally {
+    //   setLoading(false);
+    // }
+  };
 
   return (
     <View style={[shared.screen, { paddingTop: insets.top }]}>
@@ -227,6 +296,15 @@ export default function ChargeScreen() {
           activeProject={activeProject}
           handleFindBeneficiary={handleFindBeneficiary}
           validatePhone={validatePhone}
+          onQRPress={() => setStep("qr-scan")}
+        />
+      )}
+
+      {step === "qr-scan" && (
+        <QRScannerStep
+          onScanned={handleQRScanned}
+          onClose={() => setStep("phone-input")}
+          loading={loading}
         />
       )}
     </View>

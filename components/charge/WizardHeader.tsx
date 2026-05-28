@@ -12,6 +12,7 @@ export const WizardHeader: React.FC<{ step: Step }> = ({ step }) => {
   const pct = Math.round((idx / TOTAL_STEPS) * 100);
   const labels: Record<Step, string> = {
     "phone-input": "Find Beneficiary",
+    "qr-scan": "Scan QR Code",
     "no-beneficiary": "Find Beneficiary",
     "beneficiary-details": "Beneficiary Details",
     "no-token": "No Tokens",

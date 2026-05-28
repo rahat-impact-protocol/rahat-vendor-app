@@ -427,6 +427,17 @@ export const chargeService = {
     );
   },
 
+  getBeneficiaryByWallet: async (
+    baseUrl: string,
+    walletAddress: string,
+    token: string,
+  ): Promise<BeneficiaryApiResponse> => {
+    return apiFetch<BeneficiaryApiResponse>(
+      `/beneficiaries/wallet/${encodeURIComponent(walletAddress)}`,
+      { headers: authHeader(token) },
+      baseUrl,
+    );
+  },
   /**
    * POST {baseUrl}/vendor/claimcreate/:vendorId
    * Creates a claim (meta-tx request) for the given vendor.
