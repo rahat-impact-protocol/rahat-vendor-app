@@ -82,7 +82,7 @@ export interface AuthApiResponse {
 
 // ─── Core Data Models ─────────────────────────────────────────────
 
-export type TransactionStatus = 'completed' | 'pending';
+// export type TransactionStatus = 'completed' | 'pending';
 export type TransactionMode = 'online' | 'offline';
 export type RedemptionStatus = 'approved' | 'pending' | 'rejected';
 
@@ -93,7 +93,7 @@ export interface Transaction {
   hash: string;
   date: string;
   mode: TransactionMode;
-  status: TransactionStatus;
+  status: string;
   actionType: string;
   beneficiaryPhone?: string;
   beneficiaryName?: string;

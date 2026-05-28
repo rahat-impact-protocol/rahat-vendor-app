@@ -208,42 +208,6 @@ export default function ChargeScreen() {
     } finally {
       setLoading(false);
     }
-
-    // console.log("Scanned wallet address test 32:", walletAddress);
-    // setLoading(true);
-    // try {
-    //   // POST wallet address to /qrdata endpoint
-    //   const response = await fetch(`${projectBaseUrl}/qrdata`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //     body: JSON.stringify({ walletAddress }),
-    //   });
-
-    //   if (!response.ok) throw new Error("QR data endpoint failed");
-
-    //   const ben = await response.json();
-    //   setBeneficiary(ben);
-
-    //   let tokens = 0;
-    //   try {
-    //     if (ben.walletAddress) {
-    //       tokens = await getBeneficiaryOnChainBalance(ben.walletAddress);
-    //     }
-    //   } catch {
-    //     tokens = 0;
-    //   }
-
-    //   setAvailableTokens(tokens);
-    //   setStep("beneficiary-details");
-    // } catch (err: any) {
-    //   Alert.alert("Error", err?.message ?? "Failed to process QR code.");
-    //   setStep("phone-input");
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   return (

@@ -19,8 +19,9 @@ function mapTx(tx: TransactionApiResponse): Transaction {
     date: new Date(tx.createdAt).toLocaleDateString(undefined, {
       year: 'numeric', month: 'short', day: 'numeric',
     }),
-    mode: (tx.actionType?.toLowerCase() === 'offline' ? 'offline' : 'online') as 'online' | 'offline',
-    status: tx.status?.toLowerCase() === 'completed' ? 'completed' : 'pending',
+    // mode: (tx.actionType?.toLowerCase() === 'offline' ? 'offline' : 'online') as 'online' | 'offline',
+    status: tx.status,
+    // ?.toLowerCase() === 'completed' ? 'completed' : 'pending',
     projectId: '',
   };
 }
