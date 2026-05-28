@@ -61,7 +61,7 @@ export const BeneficiaryDetailsStep: React.FC<Props> = ({
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.benName}>{beneficiary.name}</Text>
-          <Text style={s.benPhone}>+977 {phone}</Text>
+          <Text style={s.benPhone}>+977 {beneficiary.phone}</Text>
         </View>
         <View style={s.benOnlineBadge}>
           <Text style={s.benOnlineText}>Online</Text>
@@ -73,7 +73,7 @@ export const BeneficiaryDetailsStep: React.FC<Props> = ({
           label="Wallet"
           value={
             beneficiary.walletAddress
-              ? `${beneficiary.walletAddress.slice(0, 8)}...${beneficiary.walletAddress.slice(-6)}`
+              ? `${beneficiary.walletAddress.slice(0, 12)}...${beneficiary.walletAddress.slice(-16)}`
               : "—"
           }
         />
