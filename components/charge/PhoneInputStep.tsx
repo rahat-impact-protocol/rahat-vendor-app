@@ -131,11 +131,11 @@ export const PhoneInputStep: React.FC<Props> = ({
               label: "Scan QR Code",
               sub: "Scan beneficiary ID card",
             },
-            {
-              icon: "nfc",
-              label: "Tap NFC Card",
-              sub: "Contactless ID verification",
-            },
+           // {
+            //   icon: "nfc",
+            //   label: "Tap NFC Card",
+            //   sub: "Contactless ID verification",
+            // },
           ].map(({ icon, label, sub }) => (
             <TouchableOpacity
               key={label}
