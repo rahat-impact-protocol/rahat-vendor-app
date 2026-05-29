@@ -1,97 +1,184 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
-import { Badge } from '@/components/ui/Badge';
-import { Colors, Shadows, Radius } from '@/constants/tokens';
-import type { Transaction } from '@/types';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Icon } from "@/components/ui/Icon";
+import type { Transaction } from "@/types";
+
+const PRIMARY = "#1A56DB";
+const CONFIRMED_BG = "#DCFCE7";
+const CONFIRMED_TEXT = "#027A48";
+const PENDING_BG = "#FFF3CD";
+const PENDING_TEXT = "#B54708";
+const TEXT_PRI = "#111827";
+const TEXT_MUTED = "#9CA3AF";
+const BORDER = "#F3F4F6";
+const SURFACE = "#FFFFFF";
 
 interface TransactionCardProps {
   transaction: Transaction;
 }
 
-export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
-  const { amount, hash, date, mode, status } = transaction;
+export const TransactionCard: React.FC<TransactionCardProps> = ({
+  transaction,
+}) => {
+  const { amount, date, status, hash, actionType } = transaction;
 
-  const isCompleted = status === 'completed';
-  const iconBg = isCompleted ? '#DCFCE7' : '#FFF3E0';
-  const iconColor = isCompleted ? '#16A34A' : '#E06714';
+  const isConfirmed = status?.toUpperCase() === "CONFIRMED";
+  const avatarBg = isConfirmed ? "#EFF6FF" : "#FFF7ED";
+  const avatarColor = isConfirmed ? PRIMARY : "#EA580C";
 
-  const modeLabel = mode === 'online' ? 'Online' : 'Offline';
-  const modeIcon = mode === 'online' ? 'wifi' : 'wifi-off';
+  const shortHash = hash ? `${hash.slice(0, 10)}…${hash.slice(-15)}` : "—";
+
+  const formattedAction = actionType
+    ? actionType
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Transaction";
 
   return (
     <View style={styles.card}>
-      <View style={[styles.iconWrapper, { backgroundColor: iconBg }]}>
-        <Icon name="arrow-up-right" size={16} color={iconColor} strokeWidth={2} />
-      </View>
-      <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={styles.amount}>{amount}</Text>
-          <Badge
-            label={isCompleted ? 'COMPLETED' : 'PENDING'}
-            variant={status}
-          />
+      <View style={styles.cardInner}>
+        {/* Avatar spanning both rows */}
+        <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+          <Icon name="zap" size={14} color={avatarColor} strokeWidth={2} />
         </View>
-        <Text style={styles.hash}>{hash}</Text>
-        <View style={styles.metaRow}>
-          <Icon name={modeIcon} size={12} color={Colors.textMuted} strokeWidth={1.75} />
-          <Text style={styles.meta}>{modeLabel} • {date}</Text>
+
+        {/* Right content */}
+        <View style={styles.content}>
+          {/* Row 1: status badge | action type | amount */}
+          <View style={styles.row}>
+            <View style={styles.leftGroup}>
+              <Text style={styles.actionType} numberOfLines={1}>
+                {formattedAction}
+              </Text>
+              <View
+                style={[
+                  styles.badge,
+                  isConfirmed ? styles.badgeConfirmed : styles.badgePending,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    isConfirmed
+                      ? styles.badgeTextConfirmed
+                      : styles.badgeTextPending,
+                  ]}
+                >
+                  {status ?? "UNKNOWN"}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.amount}>
+              {amount} <Text style={styles.unit}>Tokens</Text>
+            </Text>
+          </View>
+
+          {/* Row 2: hash | date */}
+          <View style={styles.row}>
+            <View style={styles.hashRow}>
+              <Text style={styles.hash}>{shortHash}</Text>
+            </View>
+            <Text style={styles.date}>{date}</Text>
+          </View>
         </View>
       </View>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.card,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    ...Shadows.card,
+    borderColor: BORDER,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  iconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  cardInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  leftGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
   },
   content: {
     flex: 1,
-    minWidth: 0,
-    gap: 4,
+    gap: 2,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  actionType: {
+    fontFamily: "Manrope",
+    fontWeight: "700",
+    fontSize: 14,
+    color: TEXT_PRI,
+    flexShrink: 1,
   },
   amount: {
-    fontFamily: 'Manrope',
-    fontWeight: '700',
+    fontFamily: "Manrope",
+    fontWeight: "700",
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: TEXT_PRI,
+    flexShrink: 0,
+  },
+  unit: {
+    fontFamily: "Manrope",
+    fontWeight: "400",
+    fontSize: 12,
+    color: TEXT_MUTED,
+  },
+  hashRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    flexShrink: 1,
   },
   hash: {
-    fontFamily: 'Manrope',
+    fontFamily: "Manrope",
     fontSize: 12,
-    color: Colors.textMuted,
+    color: TEXT_MUTED,
+    letterSpacing: 0.2,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  rightGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexShrink: 0,
   },
-  meta: {
-    fontFamily: 'Manrope',
-    fontSize: 12,
-    color: Colors.textMuted,
+  badge: {
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeConfirmed: { backgroundColor: CONFIRMED_BG },
+  badgePending: { backgroundColor: PENDING_BG },
+  badgeText: {
+    fontFamily: "Manrope",
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  badgeTextConfirmed: { color: CONFIRMED_TEXT },
+  badgeTextPending: { color: PENDING_TEXT },
+  date: {
+    fontFamily: "Manrope",
+    fontSize: 9,
+    color: TEXT_MUTED,
   },
 });

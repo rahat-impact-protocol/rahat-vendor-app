@@ -16,7 +16,7 @@ import type {
   VendorApiResponse,
   AuthApiResponse,
   ApiProject,
-} from '@/types';
+} from "@/types";
 
 import {
   MOCK_VENDOR,
@@ -25,12 +25,76 @@ import {
   MOCK_PROJECTS,
   MOCK_ORGANIZATIONS,
   MOCK_REDEMPTIONS,
-} from '@/mocks';
+} from "@/mocks";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://impact-core-dev.rahat.io';
-const CORE_API_BASE = process.env.EXPO_PUBLIC_CORE_API_URL ?? 'https://impact-core-dev.rahat.io';
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_URL ?? "https://impact-core-dev.rahat.io";
+const CORE_API_BASE =
+  process.env.EXPO_PUBLIC_CORE_API_URL ?? "https://impact-core-dev.rahat.io";
 
-const delay = (ms = 400) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms = 400) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// ─── Charge / Claim ───────────────────────────────────────────────
+
+export interface TransactionApiResponse {
+  vendorAddress: string;
+  status: string;
+  tokenAddress: string;
+  amount: string;
+  transactionHash: string;
+  createdAt: string;
+  actionType: string;
+}
+
+export interface TransactionMeta {
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedTransactions {
+  data: TransactionApiResponse[];
+  meta: TransactionMeta;
+}
+
+// Add this interface for the full API response
+interface TransactionApiFullResponse {
+  response: {
+    response: {
+      data: TransactionApiResponse[];
+      meta: TransactionMeta;
+    };
+    error: null | string;
+  };
+  error: null | string;
+}
+
+export interface BeneficiaryApiResponse {
+  uuid?: string;
+  name?: string;
+  phone?: string;
+  walletAddress: string;
+}
+
+export interface ClaimCreateResponse {
+  id?: string;
+  uuid?: string;
+  claimId?: string;
+  message?: string;
+}
+
+export interface OtpVerifyResponse {
+  success?: boolean;
+  txHash?: string;
+  message?: string;
+}
+
+function authHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
 
 // ─── HTTP helper ──────────────────────────────────────────────────
 async function apiFetch<T>(
@@ -39,8 +103,8 @@ async function apiFetch<T>(
   baseUrl: string = API_BASE,
 ): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
     ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
   });
 
   if (!res.ok) {
@@ -56,59 +120,76 @@ async function apiFetch<T>(
     throw err;
   }
 
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : {}) as T;
 }
 
 // ─── Map backend vendor → local Vendor shape ─────────────────────
 function mapVendor(v: VendorApiResponse): Vendor {
-  const fullName = v.name ?? '';
-  const initials = fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(w => w[0].toUpperCase())
-    .join('') || '?';
+  const fullName = v.name ?? "";
+  const initials =
+    fullName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join("") || "?";
 
   return {
-    id: String(v.id),
+    id: v.uuid ?? String(v.id ?? ""),
     name: fullName,
     initials,
     email: v.email,
-    phone: v.phone ?? v.phoneNumber ?? '',
+    phone: v.phone ?? v.phoneNumber ?? "",
     walletAddress: v.walletAddress,
-    role: v.role ?? 'Vendor',
-    activeProjectId: v.projectId ?? '',
-    activeOrgId: v.orgId ?? '',
+    role: v.role ?? "Vendor",
+    activeProjectId: v.projectId ?? "",
+    activeOrgId: v.orgId ?? "",
     isOnline: v.isOnline ?? true,
   };
 }
 
 // ─── Extract vendor + token from auth response ────────────────────
-function parseAuthResponse(data: AuthApiResponse): { vendor: Vendor; token: string } {
-  const token = data.accessToken ?? data.access_token ?? data.token ?? '';
-  const vendorData: VendorApiResponse = data.vendor ?? data.data ?? {
-    id: data.id ?? '',
-    name: data.name,
-    email: data.email ?? '',
-    phone: data.phone,
-    phoneNumber: data.phoneNumber,
-    walletAddress: data.walletAddress ?? '',
-    role: data.role,
-    projectId: data.projectId,
-    orgId: data.orgId,
-  };
+function parseAuthResponse(data: AuthApiResponse): {
+  vendor: Vendor;
+  token: string;
+} {
+  const token = data.accessToken ?? data.access_token ?? data.token ?? "";
+  const vendorData: VendorApiResponse = data.vendor ??
+    data.data ?? {
+      id: data.id ?? "",
+      name: data.name,
+      email: data.email ?? "",
+      phone: data.phone,
+      phoneNumber: data.phoneNumber,
+      walletAddress: data.walletAddress ?? "",
+      role: data.role,
+      projectId: data.projectId,
+      orgId: data.orgId,
+    };
   return { vendor: mapVendor(vendorData), token };
 }
 
 // ─── Auth ──────────────────────────────────────────────────────────
 export const authService = {
+  getSettings: async (projectBaseUrl: string) => {
+    return apiFetch("/settings", {}, projectBaseUrl);
+  },
+
   /**
    * GET /vendor/:email
    * Returns the vendor if registered in the given project, null if not found (404).
    */
-  findVendorByEmail: async (projectBaseUrl: string, email: string): Promise<VendorApiResponse | null> => {
+  findVendorByEmail: async (
+    projectBaseUrl: string,
+    email: string,
+  ): Promise<VendorApiResponse | null> => {
     try {
-      return await apiFetch<VendorApiResponse>(`/vendor/email/${encodeURIComponent(email)}`, {}, projectBaseUrl);
+      return await apiFetch<VendorApiResponse>(
+        `/vendor/email/${encodeURIComponent(email)}`,
+        {},
+        projectBaseUrl,
+      );
     } catch (err: any) {
       if (err?.status === 404) return null;
       throw err;
@@ -119,11 +200,18 @@ export const authService = {
    * POST /vendor/login
    * Logs in an existing vendor on the given project's backend.
    */
-  loginVendor: async (projectBaseUrl: string, payload: VendorLoginPayload): Promise<{ vendor: Vendor; token: string }> => {
-    const data = await apiFetch<AuthApiResponse>('/vendor/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, projectBaseUrl);
+  loginVendor: async (
+    projectBaseUrl: string,
+    payload: VendorLoginPayload,
+  ): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>(
+      "/vendor/login",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      projectBaseUrl,
+    );
     return parseAuthResponse(data);
   },
 
@@ -131,11 +219,18 @@ export const authService = {
    * POST /vendor
    * Registers a new vendor on the given project's backend.
    */
-  registerVendor: async (projectBaseUrl: string, payload: VendorRegisterPayload): Promise<{ vendor: Vendor; token: string }> => {
-    const data = await apiFetch<AuthApiResponse>('/vendor', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, projectBaseUrl);
+  registerVendor: async (
+    projectBaseUrl: string,
+    payload: VendorRegisterPayload,
+  ): Promise<{ vendor: Vendor; token: string }> => {
+    const data = await apiFetch<AuthApiResponse>(
+      "/vendor",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      projectBaseUrl,
+    );
     return parseAuthResponse(data);
   },
 
@@ -146,24 +241,61 @@ export const authService = {
 
 // ─── Transactions ─────────────────────────────────────────────────
 export const transactionService = {
+  getTransaction: async (
+    baseUrl: string,
+    vendorAddress: string,
+    token: string,
+    page: number = 1,
+    perPage: number = 10,
+  ): Promise<PaginatedTransactions> => {
+    try {
+      const response = await apiFetch<TransactionApiFullResponse>(
+        `/vendor/transaction/${encodeURIComponent(vendorAddress)}?page=${page}&perPage=${perPage}`,
+        { headers: authHeader(token) },
+        baseUrl,
+      );
+
+      const inner = response?.response?.response;
+      return {
+        data: inner?.data ?? [],
+        meta: inner?.meta ?? { total: 0, page, perPage, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
+      };
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+      return { data: [], meta: { total: 0, page, perPage, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
+    }
+  },
+
   getTransactions: async (projectId: string): Promise<Transaction[]> => {
     await delay();
-    return MOCK_TRANSACTIONS.filter(t => t.projectId === projectId);
+    return MOCK_TRANSACTIONS.filter((t) => t.projectId === projectId);
   },
 
-  getRecentTransactions: async (projectId: string, limit = 4): Promise<Transaction[]> => {
+  getRecentTransactions: async (
+    projectId: string,
+    limit = 4,
+  ): Promise<Transaction[]> => {
     await delay();
-    return MOCK_TRANSACTIONS.filter(t => t.projectId === projectId).slice(0, limit);
+    return MOCK_TRANSACTIONS.filter((t) => t.projectId === projectId).slice(
+      0,
+      limit,
+    );
   },
 
-  chargeByPhone: async (phone: string, projectId: string): Promise<Beneficiary> => {
+  chargeByPhone: async (
+    phone: string,
+    projectId: string,
+  ): Promise<Beneficiary> => {
     await delay(600);
-    const b = MOCK_BENEFICIARIES.find(b => b.phone.endsWith(phone.slice(-4)));
-    if (!b) throw new Error('Beneficiary not found');
+    const b = MOCK_BENEFICIARIES.find((b) => b.phone.endsWith(phone.slice(-4)));
+    if (!b) throw new Error("Beneficiary not found");
     return b;
   },
 
-  confirmCharge: async (beneficiaryId: string, projectId: string): Promise<{ otp: boolean }> => {
+  confirmCharge: async (
+    beneficiaryId: string,
+    projectId: string,
+  ): Promise<{ otp: boolean }> => {
     await delay(500);
     return { otp: true };
   },
@@ -178,12 +310,12 @@ export const transactionService = {
 export const beneficiaryService = {
   getBeneficiaries: async (projectId: string): Promise<Beneficiary[]> => {
     await delay();
-    return MOCK_BENEFICIARIES.filter(b => b.projectId === projectId);
+    return MOCK_BENEFICIARIES.filter((b) => b.projectId === projectId);
   },
 
   getBeneficiaryByPhone: async (phone: string): Promise<Beneficiary | null> => {
     await delay(600);
-    return MOCK_BENEFICIARIES.find(b => b.phone === phone) ?? null;
+    return MOCK_BENEFICIARIES.find((b) => b.phone === phone) ?? null;
   },
 };
 
@@ -194,7 +326,7 @@ export const projectService = {
    * Fetches the list of available projects from the core API.
    */
   getProjects: async (): Promise<ApiProject[]> => {
-    return apiFetch<ApiProject[]>('/project', {}, CORE_API_BASE);
+    return apiFetch<ApiProject[]>("/project", {}, CORE_API_BASE);
   },
 
   getProjectsByVendor: async (vendorId: string): Promise<Project[]> => {
@@ -204,14 +336,14 @@ export const projectService = {
 
   selectProject: async (projectId: string): Promise<Project> => {
     await delay(400);
-    const p = MOCK_PROJECTS.find(p => p.id === projectId);
-    if (!p) throw new Error('Project not found');
+    const p = MOCK_PROJECTS.find((p) => p.id === projectId);
+    if (!p) throw new Error("Project not found");
     return p;
   },
 
   getProjectBalance: async (projectId: string): Promise<number> => {
     await delay(300);
-    return MOCK_PROJECTS.find(p => p.id === projectId)?.tokens ?? 0;
+    return MOCK_PROJECTS.find((p) => p.id === projectId)?.tokens ?? 0;
   },
 };
 
@@ -224,8 +356,8 @@ export const organizationService = {
 
   switchOrganization: async (orgId: string): Promise<Organization> => {
     await delay(1200);
-    const org = MOCK_ORGANIZATIONS.find(o => o.id === orgId);
-    if (!org) throw new Error('Organization not found');
+    const org = MOCK_ORGANIZATIONS.find((o) => o.id === orgId);
+    if (!org) throw new Error("Organization not found");
     return org;
   },
 };
@@ -254,23 +386,97 @@ export const redemptionService = {
     await delay(200);
     const reqs = MOCK_REDEMPTIONS;
     return {
-      approved: reqs.filter(r => r.status === 'approved').length,
-      pending: reqs.filter(r => r.status === 'pending').length,
+      approved: reqs.filter((r) => r.status === "approved").length,
+      pending: reqs.filter((r) => r.status === "pending").length,
       available: 45,
     };
   },
 
-  submitRedemptionRequest: async (tokenAmount: number, vendorId: string): Promise<RedemptionRequest> => {
+  submitRedemptionRequest: async (
+    tokenAmount: number,
+    vendorId: string,
+  ): Promise<RedemptionRequest> => {
     await delay(800);
     const newReq: RedemptionRequest = {
       id: `r-${Date.now()}`,
       amount: `${tokenAmount} RAHAT`,
       tokenAmount,
       date: new Date().toLocaleString(),
-      status: 'pending',
+      status: "pending",
       vendorId,
-      projectId: 'p-001',
+      projectId: "p-001",
     };
     return newReq;
+  },
+};
+
+export const chargeService = {
+  /**
+   * GET {baseUrl}/beneficiaries/phoneNumber/:phone
+   * Fetches beneficiary details by phone number.
+   */
+  getBeneficiaryByPhone: async (
+    baseUrl: string,
+    phone: string,
+    token: string,
+  ): Promise<BeneficiaryApiResponse> => {
+    return apiFetch<BeneficiaryApiResponse>(
+      `/beneficiaries/phoneNumber/${encodeURIComponent(phone)}`,
+      { headers: authHeader(token) },
+      baseUrl,
+    );
+  },
+
+  getBeneficiaryByWallet: async (
+    baseUrl: string,
+    walletAddress: string,
+    token: string,
+  ): Promise<BeneficiaryApiResponse> => {
+    return apiFetch<BeneficiaryApiResponse>(
+      `/beneficiaries/wallet/${encodeURIComponent(walletAddress)}`,
+      { headers: authHeader(token) },
+      baseUrl,
+    );
+  },
+  /**
+   * POST {baseUrl}/vendor/claimcreate/:vendorId
+   * Creates a claim (meta-tx request) for the given vendor.
+   */
+  createClaim: async (
+    baseUrl: string,
+    vendorId: string,
+    payload: { amount: string; benAddress: string },
+    token: string,
+  ): Promise<ClaimCreateResponse> => {
+    return apiFetch<ClaimCreateResponse>(
+      `/vendor/claimcreate/${encodeURIComponent(vendorId)}`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: authHeader(token),
+      },
+      baseUrl,
+    );
+  },
+
+  /**
+   * POST {baseUrl}/vendor/verifyOtp
+   * Verifies OTP to complete the token claim.
+   */
+  verifyOtp: async (
+    baseUrl: string,
+    vendorId: string,
+    payload: { benAddress: string; otp: string },
+    token: string,
+  ): Promise<OtpVerifyResponse> => {
+    return apiFetch<OtpVerifyResponse>(
+      `/vendor/verifyotp/${encodeURIComponent(vendorId)}`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: authHeader(token),
+      },
+      baseUrl,
+    );
   },
 };

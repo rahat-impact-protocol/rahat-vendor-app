@@ -22,8 +22,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
-    if (onBack) onBack();
-    else router.back();
+    if (onBack) { onBack(); return; }
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   };
 
   return (

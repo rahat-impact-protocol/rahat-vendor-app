@@ -39,7 +39,7 @@ export interface VendorLoginPayload {
 }
 
 export interface VendorApiResponse {
-  id: string | number;
+  id?: string | number;
   uuid?: string;
   name?: string;
   email: string;
@@ -52,12 +52,22 @@ export interface VendorApiResponse {
   isOnline?: boolean;
 }
 
+export interface AuthSession {
+  sessionId: string;
+  authProvider: string;
+  expiresAt: string;
+}
+
 export interface AuthApiResponse {
-  accessToken?: string;   // camelCase (actual API)
-  access_token?: string;  // snake_case (legacy)
+  status?: string;
+  message?: string;
+  tokenType?: string;
+  accessToken?: string;
+  access_token?: string;
   token?: string;
-  data?: VendorApiResponse;   // nested vendor (actual API)
-  vendor?: VendorApiResponse; // nested vendor (legacy)
+  session?: AuthSession;
+  data?: VendorApiResponse;
+  vendor?: VendorApiResponse;
   // fallback: vendor fields returned at top level
   id?: string;
   email?: string;
@@ -72,7 +82,7 @@ export interface AuthApiResponse {
 
 // ─── Core Data Models ─────────────────────────────────────────────
 
-export type TransactionStatus = 'completed' | 'pending';
+// export type TransactionStatus = 'completed' | 'pending';
 export type TransactionMode = 'online' | 'offline';
 export type RedemptionStatus = 'approved' | 'pending' | 'rejected';
 
@@ -83,7 +93,8 @@ export interface Transaction {
   hash: string;
   date: string;
   mode: TransactionMode;
-  status: TransactionStatus;
+  status: string;
+  actionType: string;
   beneficiaryPhone?: string;
   beneficiaryName?: string;
   projectId: string;

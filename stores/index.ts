@@ -68,14 +68,23 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// ─── Project Store ─────────────────────────────────────────────────
-export const useProjectStore = create<ProjectState>((set) => ({
-  activeProject: null,
-  projects: MOCK_PROJECTS,
-  setActiveProject: (project) => set({ activeProject: project }),
-  setProjects: (projects) => set({ projects }),
-  resetProjects: () => set({ activeProject: null, projects: MOCK_PROJECTS }),
-}));
+// ─── Project Store (persisted) ────────────────────────────────────
+export const useProjectStore = create<ProjectState>()(
+  persist(
+    (set) => ({
+      activeProject: null,
+      projects: MOCK_PROJECTS,
+      setActiveProject: (project) => set({ activeProject: project }),
+      setProjects: (projects) => set({ projects }),
+      resetProjects: () => set({ activeProject: null, projects: MOCK_PROJECTS }),
+    }),
+    {
+      name: 'rahat-project',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ activeProject: state.activeProject }),
+    },
+  ),
+);
 
 // ─── Org Store ─────────────────────────────────────────────────────
 export const useOrgStore = create<OrgState>((set) => ({
