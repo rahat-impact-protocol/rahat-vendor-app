@@ -61,10 +61,8 @@ export const BeneficiaryDetailsStep: React.FC<Props> = ({
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.benName}>{beneficiary.name}</Text>
-          <Text style={s.benPhone}>+977 {beneficiary.phone}</Text>
-        </View>
-        <View style={s.benOnlineBadge}>
-          <Text style={s.benOnlineText}>Online</Text>
+          {/* <Text style={s.benPhone}>+977 {beneficiary.phone}</Text> */}
+          <Text style={s.benPhone}>{beneficiary.phone}</Text>
         </View>
       </View>
 
@@ -108,7 +106,9 @@ export const BeneficiaryDetailsStep: React.FC<Props> = ({
       )}
 
       <Button
-        label={availableTokens > 0 ? "Proceed to Redeem" : "No Tokens Available"}
+        label={
+          availableTokens > 0 ? "Proceed to Redeem" : "No Tokens Available"
+        }
         icon={availableTokens > 0 ? "zap" : "alert-circle"}
         onPress={handleProceedFromDetails}
       />

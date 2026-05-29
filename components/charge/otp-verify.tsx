@@ -123,7 +123,8 @@ export default function OtpVerifyScreen() {
 
             <View style={s.card}>
               <InfoRow label="Beneficiary" value={beneficiaryName ?? "—"} />
-              <InfoRow label="Phone" value={`+977 ${phone}`} />
+              {/* <InfoRow label="Phone" value={`+977 ${phone}`} /> */}
+              <InfoRow label="Phone" value={phone} />
               <InfoRow label="Amount Charged" value={`${amount} Tokens`} />
               <InfoRow label="Project" value={projectName ?? "—"} />
               {txHash ? (

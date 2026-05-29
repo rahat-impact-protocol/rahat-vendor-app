@@ -19,7 +19,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ethers } from "ethers";
-import { FUND_STORAGE_ABI, ERC20_ABI } from "./abi";
+import { FUND_STORAGE_ABI } from "./abi";
 
 import { tokenAbi } from "./tokenabi";
 
