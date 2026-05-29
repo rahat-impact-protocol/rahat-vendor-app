@@ -69,6 +69,7 @@ export default function ChargeScreen() {
     try {
       const ben = await chargeService.getBeneficiaryByPhone(
         projectBaseUrl,
+        // `+977${phone}`,
         phone,
         token,
       );
