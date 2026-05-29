@@ -21,9 +21,14 @@ jobs:
             github/data/general/docker/esatya password | DOCKERHUB_TOKEN ;
             github/data/rahat/rahat-impact-vendor-app env | ENV_SECRETS
 
-      - name: Create .env file
+      - name: Create .env file and export vars
         run: |
           echo "${{ env.ENV_SECRETS }}" > .env
+          # Export each var to GitHub Actions env
+          while IFS= read -r line; do
+            [[ -z "$line" || "$line" == \#* ]] && continue
+            echo "$line" >> $GITHUB_ENV
+          done < .env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,5 +48,9 @@ jobs:
           tags: |
             esatya/rahat-impact-vendor-app:dev
             esatya/rahat-impact-vendor-app:${{ github.sha }}
+          build-args: |
+            EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=${{ env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID }}
+            EXPO_PUBLIC_API_URL=${{ env.EXPO_PUBLIC_API_URL }}
+            EXPO_PUBLIC_CORE_API_URL=${{ env.EXPO_PUBLIC_CORE_API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
