@@ -73,8 +73,9 @@ export const PhoneInputStep: React.FC<Props> = ({
           <TextInput
             value={phone}
             onChangeText={(v) => {
-              setPhone(v.replace(/[^0-9]/g, ""));
-              if (phoneError) validatePhone(v);
+              const cleaned = v.replace(/[^0-9+]/g, "");
+              setPhone(cleaned);
+              if (phoneError) validatePhone(cleaned);
             }}
             placeholder="Enter phone number"
             keyboardType="phone-pad"

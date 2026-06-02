@@ -18,7 +18,7 @@ import { FOLDER_NAME, FILE_NAME, SCOPES } from '@/constants/googleDrive';
 
 // Required so the OAuth redirect closes the browser and returns to the app
 WebBrowser.maybeCompleteAuthSession();
-
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 interface UseGoogleAuthOptions {
   onSuccess: (user: GoogleUser) => void;
   onError?: (error: Error) => void;

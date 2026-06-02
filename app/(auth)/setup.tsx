@@ -153,7 +153,6 @@ export default function SetupScreen() {
         );
       } catch (error) {
         // Non-critical — proceed even if settings fetch fails
-        console.log("Failed to fetch settings:", error);
       }
 
       const existing = await authService.findVendorByEmail(

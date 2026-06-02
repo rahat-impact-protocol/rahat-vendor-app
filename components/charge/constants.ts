@@ -3,8 +3,8 @@ import { z } from "zod";
 export const phoneSchema = z
   .string()
   .min(7, "Phone number must be at least 7 digits")
-  .max(15, "Phone number must be at most 15 digits")
-  .regex(/^\d+$/, "Phone number must contain digits only");
+  .max(19, "Phone number must be at most 19 digits")
+  .regex(/^[0-9+]+$/, "Phone number must contain digits only");
 
 export type Step =
   | "phone-input"

@@ -41,7 +41,7 @@ export default function ChargeScreen() {
   const validatePhone = (val: string): boolean => {
     const result = phoneSchema.safeParse(val);
     if (!result.success) {
-      setPhoneError("Phone number must be 7–15 digits");
+      setPhoneError("Phone number must be 7–19 digits");
       return false;
     }
     setPhoneError("");
@@ -67,9 +67,11 @@ export default function ChargeScreen() {
     Keyboard.dismiss();
     setLoading(true);
     try {
+      const rawPhone = phone.trim();
+      const phonee = rawPhone.startsWith("+977") ? rawPhone : `+977${rawPhone}`;
       const ben = await chargeService.getBeneficiaryByPhone(
         projectBaseUrl,
-        phone,
+        phonee,
         token,
       );
       setBeneficiary(ben);

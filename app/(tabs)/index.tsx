@@ -22,7 +22,6 @@ export default function HomeScreen() {
   const token = useAuthStore((s) => s.accessToken);
   const project = useProjectStore((s) => s.activeProject);
   const org = useOrgStore((s) => s.activeOrg);
-  console.log("vendor", vendor);
 
   // Adjust this import path to your actual types file
 
@@ -74,12 +73,12 @@ export default function HomeScreen() {
 
   const fetchVendorBalance = React.useCallback(async () => {
     if (!vendor?.walletAddress) return;
-    console.log("Fetching on-chain balance for vendor:", vendor.walletAddress);
     setBalanceLoading(true);
     try {
       const bal = await getVendorOnChainBalance(vendor.walletAddress);
       setVendorBalance(bal);
     } catch (e) {
+      console.error("Failed to fetch on-chain balance:", e);
       setVendorBalance(null);
     } finally {
       setBalanceLoading(false);
