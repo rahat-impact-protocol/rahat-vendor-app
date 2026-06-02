@@ -707,13 +707,10 @@ const balance: bigint = await fundStorageContract.checkBeneficiaryBalance(
 
 // balance is a BigInt (uint256 from Solidity)
 // To convert to a regular number string:
-console.log(balance.toString());  // e.g. "1000000"
 
 // If the token has 18 decimals (like most ERC-20), format it:
-console.log(ethers.formatEther(balance));  // e.g. "0.000000000001"
 
 // If the token has 6 decimals (like USDC/USDT):
-console.log(ethers.formatUnits(balance, 6));  // e.g. "1.0"
 ```
 
 > **Why BigInt?**  
@@ -753,7 +750,6 @@ import { getBlockchainSetting, getContractSetting } from './appSettings';
  *
  * @example
  * const balance = await getBeneficiaryBalance('0xAbCd...');
- * console.log(balance); // "500000"
  */
 export async function getBeneficiaryBalance(
   beneficiaryAddress: string
@@ -806,7 +802,6 @@ export async function getBeneficiaryBalance(
  *
  * @example
  * const balance = await getBeneficiaryBalanceFormatted('0xAbCd...', 18);
- * console.log(balance); // "1.5"
  */
 export async function getBeneficiaryBalanceFormatted(
   beneficiaryAddress: string,

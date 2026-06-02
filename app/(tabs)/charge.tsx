@@ -68,13 +68,10 @@ export default function ChargeScreen() {
     setLoading(true);
     try {
       const rawPhone = phone.trim();
-      console.log("Finding beneficiary for phone:", rawPhone);
       const phonee = rawPhone.startsWith("+977") ? rawPhone : `+977${rawPhone}`;
-      console.log("Formatted phone for API:", phonee);
       const ben = await chargeService.getBeneficiaryByPhone(
         projectBaseUrl,
         phonee,
-        // phone,
         token,
       );
       setBeneficiary(ben);

@@ -44,7 +44,6 @@ export const QRScannerStep: React.FC<Props> = ({
       );
       return;
     }
-console.log("Scanned wallet address:", walletAddress);
     onScanned(walletAddress);
   };
 

@@ -111,7 +111,6 @@ export async function getBeneficiaryOnChainBalance(
     const whole = parseFloat(
       Number(ethers.utils.formatUnits(balance, decimals)).toFixed(2),
     );
-    console.log("ERC20.balanceOf:", balance.toString(), "→", whole);
     return whole;
   } catch (err: any) {
     console.warn("checkBeneficiaryBalance failed:", err?.code ?? err?.message);
@@ -155,12 +154,6 @@ export async function getBeneficiaryOnChainBalance(
 //   );
 //   const beneficiary = ethers.utils.getAddress(beneficiaryAddress);
 
-//   console.log("Balance lookup:", {
-//     disbursementContract: disbursementAddress,
-//     projectKey: projectKeyAddress,
-//     token: tokenAddress,
-//     beneficiary,
-//   });
 
 //   const provider = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
 //   const disbursement = new ethers.Contract(
@@ -169,7 +162,6 @@ export async function getBeneficiaryOnChainBalance(
 //     provider,
 //   );
 
-//   console.log("Attempting beneficiaryAssignment lookup on DisbursementContract...", disbursement);
 //   // ── Primary: beneficiaryAssignment public mapping ────────────────────────────
 //   // Direct storage read — no access control, returns 0 if not assigned.
 //   // Key order: beneficiaryAssignment[token][fundStorageAddress][beneficiary]
@@ -179,7 +171,6 @@ export async function getBeneficiaryOnChainBalance(
 //       projectKeyAddress,
 //       beneficiary,
 //     );
-//     console.log("disbursement.beneficiaryAssignment:", balance.toString());
 //     return balance.toNumber();
 //   } catch (err: any) {
 //     console.warn("beneficiaryAssignment failed:", err?.code ?? err?.message);
@@ -201,7 +192,6 @@ export async function getBeneficiaryOnChainBalance(
 //       /* keep 18 */
 //     }
 //     const whole = parseFloat(Number(ethers.utils.formatUnits(balance, decimals)).toFixed(2));
-//     console.log("ERC20.balanceOf:", balance.toString(), "→", whole);
 //     return whole;
 //   } catch (err: any) {
 //     console.warn("ERC20.balanceOf failed:", err?.code ?? err?.message);
@@ -236,7 +226,6 @@ export async function getVendorOnChainBalance(
   const tokenAddress = ethers.utils.getAddress(contract.token.address);
   const vendor = ethers.utils.getAddress(vendorAddress);
 
-  console.log("Vendor balance lookup:", { token: tokenAddress, vendor });
 
   const provider = new ethers.providers.JsonRpcProvider(blockchain.rpcUrl);
   const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider);
@@ -253,6 +242,5 @@ export async function getVendorOnChainBalance(
   const whole = parseFloat(
     Number(ethers.utils.formatUnits(balance, decimals)).toFixed(2),
   );
-  console.log("ERC20.balanceOf vendor:", balance.toString(), "→", whole);
   return whole;
 }
