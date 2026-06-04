@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuthStore, useProjectStore } from "@/stores";
-import { authService, projectService } from "@/services";
-import { checkOrCreateWallet } from "@/utils/googleDrive";
-import type { ApiProject, GoogleUser } from "@/types";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { useAuthStore, useProjectStore } from '@/stores';
+import { authService, projectService } from '@/services';
+import { checkOrCreateWallet } from '@/utils/googleDrive';
+import type { ApiProject, GoogleUser } from '@/types';
 
-const APP_SETTINGS_KEY = "rahat-app-settings";
+const APP_SETTINGS_KEY = 'rahat-app-settings';
 
 /**
  * Flow:
@@ -35,11 +36,11 @@ const APP_SETTINGS_KEY = "rahat-app-settings";
  *  5. 'submitting'  — registerVendor with stored wallet address → navigate
  */
 type Step =
-  | "wallet-check"
-  | "projects"
-  | "checking"
-  | "phone-form"
-  | "submitting";
+  | 'wallet-check'
+  | 'projects'
+  | 'checking'
+  | 'phone-form'
+  | 'submitting';
 
 export default function SetupScreen() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function SetupScreen() {
   const storedWallet = useAuthStore((s) => s.wallet);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
 
-  const [step, setStep] = React.useState<Step>("wallet-check");
+  const [step, setStep] = React.useState<Step>('wallet-check');
   const [walletError, setWalletError] = React.useState<string | null>(null);
 
   // Project selection
@@ -65,8 +66,8 @@ export default function SetupScreen() {
   >(null);
 
   // Phone-form fields
-  const [name, setName] = React.useState("");
-  const [phone, setPhone] = React.useState("");
+  const [name, setName] = React.useState('');
+  const [phone, setPhone] = React.useState('');
   const [errors, setErrors] = React.useState<{ name?: string; phone?: string }>(
     {},
   );
@@ -74,13 +75,13 @@ export default function SetupScreen() {
   // Guard: redirect to login if arrived here without a google user
   React.useEffect(() => {
     if (!googleUser) {
-      router.replace("/(auth)/login");
+      router.replace('/(auth)/login');
     }
   }, [googleUser]);
 
   // Step 1: Check/create wallet immediately after Google sign-in
   React.useEffect(() => {
-    if (googleUser && step === "wallet-check") {
+    if (googleUser && step === 'wallet-check') {
       initializeWallet();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,11 +100,11 @@ export default function SetupScreen() {
       });
       // Kick off project loading in parallel before showing the project list
       loadProjects();
-      setStep("projects");
+      setStep('projects');
     } catch (err: any) {
       setWalletError(
         err?.message ??
-          "Failed to initialize wallet. Check your Drive permissions.",
+          'Failed to initialize wallet. Check your Drive permissions.',
       );
     }
   };
@@ -119,7 +120,7 @@ export default function SetupScreen() {
       })
       .catch((err: any) => {
         if (!cancelled)
-          setProjectsError(err?.message ?? "Failed to load projects.");
+          setProjectsError(err?.message ?? 'Failed to load projects.');
       })
       .finally(() => {
         if (!cancelled) setProjectsLoading(false);
@@ -132,12 +133,12 @@ export default function SetupScreen() {
   // ── After project selected → check if vendor exists ──────────────
   const handleGetStarted = async () => {
     if (!selectedProject) {
-      setProjectSelectError("Please select a project");
+      setProjectSelectError('Please select a project');
       return;
     }
     if (!googleUser) return;
     setProjectSelectError(null);
-    setStep("checking");
+    setStep('checking');
 
     try {
       // Fetch and cache app settings before vendor lookup
@@ -166,23 +167,23 @@ export default function SetupScreen() {
           selectedProject.baseUrl,
           {
             email: googleUser.email,
-            phoneNumber: existing.phoneNumber ?? existing.phone ?? "",
-            authProvider: "google",
+            phoneNumber: existing.phoneNumber ?? existing.phone ?? '',
+            authProvider: 'google',
             providerSubject: googleUser.id,
           },
         );
         commitAndNavigate(vendor, token);
       } else {
         // New vendor → collect phone number
-        setName(googleUser.name ?? "");
-        setStep("phone-form");
+        setName(googleUser.name ?? '');
+        setStep('phone-form');
       }
     } catch (err: any) {
-      console.error("[Setup] handleGetStarted error:", err);
-      setStep("projects");
+      console.error('[Setup] handleGetStarted error:', err);
+      setStep('projects');
       Alert.alert(
-        "Error",
-        err?.message ?? "Something went wrong. Please try again.",
+        'Error',
+        err?.message ?? 'Something went wrong. Please try again.',
       );
     }
   };
@@ -190,11 +191,11 @@ export default function SetupScreen() {
   // ── Phone-form validation ─────────────────────────────────────────
   const validatePhone = (): boolean => {
     const next: typeof errors = {};
-    if (!name.trim()) next.name = "Name is required";
+    if (!name.trim()) next.name = 'Name is required';
     if (!phone.trim()) {
-      next.phone = "Phone number is required";
-    } else if (!/^\+?[0-9\s\-]{7,15}$/.test(phone.trim())) {
-      next.phone = "Enter a valid phone number";
+      next.phone = 'Phone number is required';
+    } else if (!/^\+[0-9]{7,15}$/.test(phone.trim())) {
+      next.phone = 'Enter a valid phone number';
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -205,12 +206,12 @@ export default function SetupScreen() {
     if (!validatePhone() || !googleUser || !selectedProject) return;
     if (!storedWallet) {
       Alert.alert(
-        "Wallet Error",
-        "Wallet not initialized. Please go back and try again.",
+        'Wallet Error',
+        'Wallet not initialized. Please go back and try again.',
       );
       return;
     }
-    setStep("submitting");
+    setStep('submitting');
 
     try {
       const { vendor, token } = await authService.registerVendor(
@@ -220,18 +221,18 @@ export default function SetupScreen() {
           name: name.trim(),
           phoneNumber: phone.trim(),
           email: googleUser.email,
-          authProvider: "google",
+          authProvider: 'google',
           providerSubject: googleUser.id,
         },
       );
 
       commitAndNavigate(vendor, token);
     } catch (err: any) {
-      console.error("[Setup] handleRegister error:", err);
-      setStep("phone-form");
+      console.error('[Setup] handleRegister error:', err);
+      setStep('phone-form');
       Alert.alert(
-        "Registration failed",
-        err?.message ?? "Something went wrong. Please try again.",
+        'Registration failed',
+        err?.message ?? 'Something went wrong. Please try again.',
       );
     }
   };
@@ -243,20 +244,20 @@ export default function SetupScreen() {
         id: selectedProject.id,
         name: selectedProject.name,
         baseUrl: selectedProject.baseUrl,
-        orgId: "",
-        orgName: "",
+        orgId: '',
+        orgName: '',
         tokens: 0,
         isActive: true,
       });
     }
     login(vendor, token);
-    router.replace("/(tabs)");
+    router.replace('/(tabs)');
   };
 
   if (!googleUser) return null;
 
   // Wallet check loading / error screen
-  if (step === "wallet-check") {
+  if (step === 'wallet-check') {
     return (
       <View style={styles.centeredScreen}>
         {walletError ? (
@@ -284,30 +285,30 @@ export default function SetupScreen() {
   }
 
   // Checking / submitting loading screens
-  if (step === "checking" || step === "submitting") {
+  if (step === 'checking' || step === 'submitting') {
     return (
       <View style={styles.centeredScreen}>
         <ActivityIndicator size="large" color="#1D70B8" />
         <Text style={styles.checkingText}>
-          {step === "checking"
-            ? "Checking your account…"
-            : "Creating your account…"}
+          {step === 'checking'
+            ? 'Checking your account…'
+            : 'Creating your account…'}
         </Text>
         <Text style={styles.checkingSub}>
-          {step === "checking"
-            ? "Verifying with the selected project"
-            : "Registering you as a vendor"}
+          {step === 'checking'
+            ? 'Verifying with the selected project'
+            : 'Registering you as a vendor'}
         </Text>
       </View>
     );
   }
 
   // ── Phone form (new vendor only) ──────────────────────────────────
-  if (step === "phone-form") {
+  if (step === 'phone-form') {
     return (
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           style={styles.screen}
@@ -353,17 +354,42 @@ export default function SetupScreen() {
               <Text style={styles.label}>
                 Phone Number <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, errors.phone ? styles.inputError : null]}
+              {/* <View
+                style={[
+                  styles.phoneRow,
+                  // phoneError ? styles.phoneRowError : null,
+                ]}
+              >
+                <View style={styles.dialCode}>
+                  <Text style={styles.dialText}>+977</Text>
+                </View>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.phone ? styles.inputError : null,
+                  ]}
+                  value={phone}
+                  onChangeText={(v) => {
+                    setPhone(v);
+                    setErrors((e) => ({ ...e, phone: undefined }));
+                  }}
+                  placeholder="Enter phone number"
+                  placeholderTextColor="#B0B0B0"
+                  keyboardType="phone-pad"
+                  returnKeyType="done"
+                />
+                {errors.phone ? (
+                  <Text style={styles.errorText}>{errors.phone}</Text>
+                ) : null}
+              </View> */}
+              <PhoneInput
                 value={phone}
-                onChangeText={(v) => {
+                onChange={(v) => {
                   setPhone(v);
                   setErrors((e) => ({ ...e, phone: undefined }));
                 }}
-                placeholder="+977 98XXXXXXXX"
-                placeholderTextColor="#B0B0B0"
-                keyboardType="phone-pad"
-                returnKeyType="done"
+                error={errors.phone}
+                placeholder="Enter phone number"
               />
               {errors.phone ? (
                 <Text style={styles.errorText}>{errors.phone}</Text>
@@ -381,7 +407,7 @@ export default function SetupScreen() {
 
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => setStep("projects")}
+            onPress={() => setStep('projects')}
             activeOpacity={0.7}
           >
             <Text style={styles.backBtnText}>← Back to projects</Text>
@@ -395,7 +421,7 @@ export default function SetupScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         style={styles.screen}
@@ -529,54 +555,63 @@ function GoogleAccountCard({ googleUser }: { googleUser: GoogleUser }) {
 const styles = StyleSheet.create({
   centeredScreen: {
     flex: 1,
-    backgroundColor: "#F5F6FA",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#F5F6FA',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 32,
     gap: 12,
   },
+  input: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontFamily: 'Manrope',
+    fontSize: 14,
+    color: '#1F242A',
+  },
   centeredCard: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 16,
     gap: 12,
   },
   checkingText: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 16,
-    color: "#1F242A",
+    color: '#1F242A',
     marginTop: 8,
   },
   errorTitle: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 16,
-    color: "#E53935",
+    color: '#E53935',
     marginTop: 8,
   },
   checkingSub: {
-    fontFamily: "Manrope",
-    fontWeight: "400",
+    fontFamily: 'Manrope',
+    fontWeight: '400',
     fontSize: 13,
-    color: "#6B6969",
-    textAlign: "center",
+    color: '#6B6969',
+    textAlign: 'center',
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: "#1D70B8",
+    backgroundColor: '#1D70B8',
     paddingHorizontal: 28,
     paddingVertical: 12,
     borderRadius: 10,
   },
   retryBtnText: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 14,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   screen: {
     flex: 1,
-    backgroundColor: "#F5F6FA",
+    backgroundColor: '#F5F6FA',
   },
   content: {
     flexGrow: 1,
@@ -586,29 +621,29 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   headerTitle: {
-    fontFamily: "Manrope",
-    fontWeight: "800",
+    fontFamily: 'Manrope',
+    fontWeight: '800',
     fontSize: 26,
-    color: "#1F242A",
+    color: '#1F242A',
     marginBottom: 6,
   },
   headerSub: {
-    fontFamily: "Manrope",
-    fontWeight: "400",
+    fontFamily: 'Manrope',
+    fontWeight: '400',
     fontSize: 14,
-    color: "#6B6969",
+    color: '#6B6969',
     lineHeight: 21,
   },
   accountCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 24,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E8EAF0",
+    borderColor: '#E8EAF0',
   },
   avatar: {
     width: 46,
@@ -619,43 +654,43 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#1D70B8",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#1D70B8',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarFallbackText: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 18,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   accountInfo: {
     flex: 1,
   },
   accountName: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 14,
-    color: "#1F242A",
+    color: '#1F242A',
   },
   accountEmail: {
-    fontFamily: "Manrope",
-    fontWeight: "400",
+    fontFamily: 'Manrope',
+    fontWeight: '400',
     fontSize: 12,
-    color: "#6B6969",
+    color: '#6B6969',
     marginTop: 2,
   },
   verifiedBadge: {
-    backgroundColor: "#EAF2FF",
+    backgroundColor: '#EAF2FF',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
   },
   verifiedText: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 11,
-    color: "#1D70B8",
+    color: '#1D70B8',
   },
   form: {
     gap: 20,
@@ -665,32 +700,22 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    fontFamily: "Manrope",
-    fontWeight: "600",
+    fontFamily: 'Manrope',
+    fontWeight: '600',
     fontSize: 13,
-    color: "#3A3F47",
+    color: '#3A3F47',
   },
   required: {
-    color: "#E53935",
+    color: '#E53935',
   },
-  input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#E2E4E8",
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontFamily: "Manrope",
-    fontSize: 14,
-    color: "#1F242A",
-  },
+
   inputError: {
-    borderColor: "#E53935",
+    borderColor: '#E53935',
   },
   errorText: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    color: "#E53935",
+    color: '#E53935',
     marginTop: 2,
   },
   projectList: {
@@ -698,22 +723,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   projectItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: "#E2E4E8",
+    borderColor: '#E2E4E8',
     padding: 14,
   },
   projectItemSelected: {
-    borderColor: "#1D70B8",
-    backgroundColor: "#F0F6FF",
+    borderColor: '#1D70B8',
+    backgroundColor: '#F0F6FF',
   },
   projectItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     flex: 1,
   },
@@ -721,65 +746,65 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#D0D5DD",
+    backgroundColor: '#D0D5DD',
   },
   projectDotSelected: {
-    backgroundColor: "#1D70B8",
+    backgroundColor: '#1D70B8',
   },
   projectName: {
-    fontFamily: "Manrope",
-    fontWeight: "600",
+    fontFamily: 'Manrope',
+    fontWeight: '600',
     fontSize: 13,
-    color: "#1F242A",
+    color: '#1F242A',
   },
   projectNameSelected: {
-    color: "#1D70B8",
+    color: '#1D70B8',
   },
   projectOrg: {
-    fontFamily: "Manrope",
-    fontWeight: "400",
+    fontFamily: 'Manrope',
+    fontWeight: '400',
     fontSize: 11,
-    color: "#6B6969",
+    color: '#6B6969',
     marginTop: 2,
   },
   checkmark: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: "#1D70B8",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#1D70B8',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checkmarkText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   submitBtn: {
     height: 52,
-    backgroundColor: "#1D70B8",
+    backgroundColor: '#1D70B8',
     borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   submitBtnDisabled: {
     opacity: 0.5,
   },
   submitBtnText: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 16,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   backBtn: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 16,
     paddingVertical: 8,
   },
   backBtnText: {
-    fontFamily: "Manrope",
-    fontWeight: "600",
+    fontFamily: 'Manrope',
+    fontWeight: '600',
     fontSize: 13,
-    color: "#1D70B8",
+    color: '#1D70B8',
   },
 });
