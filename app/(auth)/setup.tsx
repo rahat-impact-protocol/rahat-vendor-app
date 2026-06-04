@@ -240,15 +240,7 @@ export default function SetupScreen() {
   // ── Persist state and navigate to app ────────────────────────────
   const commitAndNavigate = (vendor: any, token: string) => {
     if (selectedProject) {
-      setActiveProject({
-        id: selectedProject.id,
-        name: selectedProject.name,
-        baseUrl: selectedProject.baseUrl,
-        orgId: '',
-        orgName: '',
-        tokens: 0,
-        isActive: true,
-      });
+      setActiveProject(selectedProject);
     }
     login(vendor, token);
     router.replace('/(tabs)');

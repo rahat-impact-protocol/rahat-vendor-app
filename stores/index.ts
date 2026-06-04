@@ -1,9 +1,10 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Vendor, Project, Organization, GoogleUser } from "@/types";
-import type { GeneratedWallet } from "@/utils/wallet";
-import { MOCK_PROJECTS, MOCK_ORGANIZATIONS } from "@/mocks";
+//rahat-vendor-app/stores/index.ts
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Vendor, ApiProject, Organization, GoogleUser } from '@/types';
+import type { GeneratedWallet } from '@/utils/wallet';
+import { MOCK_ORGANIZATIONS } from '@/mocks';
 
 interface AuthState {
   // Persisted
@@ -22,10 +23,10 @@ interface AuthState {
 }
 
 interface ProjectState {
-  activeProject: Project | null;
-  projects: Project[];
-  setActiveProject: (project: Project) => void;
-  setProjects: (projects: Project[]) => void;
+  activeProject: ApiProject | null;
+  projects: ApiProject[];
+  setActiveProject: (project: ApiProject) => void;
+  setProjects: (projects: ApiProject[]) => void;
   resetProjects: () => void;
 }
 
@@ -48,7 +49,14 @@ export const useAuthStore = create<AuthState>()(
       wallet: null,
       _hasHydrated: false,
       login: (vendor, token) => set({ accessToken: token, vendor }),
-      logout: () => set({ accessToken: null, vendor: null, mnemonic: null, googleUser: null, wallet: null }),
+      logout: () =>
+        set({
+          accessToken: null,
+          vendor: null,
+          mnemonic: null,
+          googleUser: null,
+          wallet: null,
+        }),
       setGoogleUser: (user) => set({ googleUser: user }),
       setWallet: (wallet) => set({ wallet, mnemonic: wallet.mnemonic }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
@@ -73,10 +81,10 @@ export const useProjectStore = create<ProjectState>()(
   persist(
     (set) => ({
       activeProject: null,
-      projects: MOCK_PROJECTS,
+      projects: [],
       setActiveProject: (project) => set({ activeProject: project }),
       setProjects: (projects) => set({ projects }),
-      resetProjects: () => set({ activeProject: null, projects: MOCK_PROJECTS }),
+      resetProjects: () => set({ activeProject: null, projects: [] }),
     }),
     {
       name: 'rahat-project',
@@ -92,5 +100,9 @@ export const useOrgStore = create<OrgState>((set) => ({
   organizations: MOCK_ORGANIZATIONS,
   setActiveOrg: (org) => set({ activeOrg: org }),
   setOrganizations: (organizations) => set({ organizations }),
-  resetOrgs: () => set({ activeOrg: MOCK_ORGANIZATIONS[0], organizations: MOCK_ORGANIZATIONS }),
+  resetOrgs: () =>
+    set({
+      activeOrg: MOCK_ORGANIZATIONS[0],
+      organizations: MOCK_ORGANIZATIONS,
+    }),
 }));
