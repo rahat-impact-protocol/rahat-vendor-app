@@ -52,6 +52,16 @@ export const Icon: React.FC<IconProps> = ({
         <Rect x="20" y="20" width="2" height="2" fill={color} stroke="none" />
       </>
     ),
+    wallet: (
+      <>
+        <Path
+          d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"
+          {...props}
+        />
+        <Path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" {...props} />
+        <Circle cx="17" cy="14" r="1.5" fill={color} stroke="none" />
+      </>
+    ),
     users: (
       <>
         <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" {...props} />
