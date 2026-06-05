@@ -243,7 +243,7 @@ export default function SetupScreen() {
       setActiveProject(selectedProject);
     }
     login(vendor, token);
-    router.replace('/(tabs)');
+    router.replace(vendor?.isApproved ? '/(tabs)' : '/pending-approval');
   };
 
   if (!googleUser) return null;

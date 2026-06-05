@@ -20,6 +20,7 @@ interface AuthState {
   setGoogleUser: (user: GoogleUser) => void;
   setWallet: (wallet: GeneratedWallet) => void;
   setHasHydrated: (v: boolean) => void;
+  setVendor: (vendor: Vendor) => void;
 }
 
 interface ProjectState {
@@ -60,6 +61,7 @@ export const useAuthStore = create<AuthState>()(
       setGoogleUser: (user) => set({ googleUser: user }),
       setWallet: (wallet) => set({ wallet, mnemonic: wallet.mnemonic }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
+      setVendor: (vendor) => set({ vendor }),
     }),
     {
       name: 'rahat-auth',

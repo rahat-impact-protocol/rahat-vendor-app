@@ -146,6 +146,7 @@ function mapVendor(v: VendorApiResponse): Vendor {
     activeProjectId: v.projectId ?? "",
     activeOrgId: v.orgId ?? "",
     isOnline: v.isOnline ?? true,
+    isApproved: v.isApproved ?? false,
   };
 }
 

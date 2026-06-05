@@ -50,6 +50,7 @@ export interface VendorApiResponse {
   projectId?: string;
   orgId?: string;
   isOnline?: boolean;
+  isApproved?: boolean;
 }
 
 export interface AuthSession {
@@ -143,6 +144,7 @@ export interface Vendor {
   activeProjectId: string;
   activeOrgId: string;
   isOnline: boolean;
+  isApproved: boolean;
 }
 
 export interface RedemptionRequest {

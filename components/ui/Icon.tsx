@@ -1,6 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Path, Rect, Circle, Polyline, Line, Polygon } from 'react-native-svg';
+import Svg, {
+  Path,
+  Rect,
+  Circle,
+  Polyline,
+  Line,
+  Polygon,
+} from 'react-native-svg';
 
 interface IconProps {
   name: string;
@@ -56,7 +63,10 @@ export const Icon: React.FC<IconProps> = ({
     settings: (
       <>
         <Circle cx="12" cy="12" r="3" {...props} />
-        <Path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" {...props} />
+        <Path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+          {...props}
+        />
       </>
     ),
     'arrow-left': (
@@ -82,12 +92,18 @@ export const Icon: React.FC<IconProps> = ({
     copy: (
       <>
         <Rect x="9" y="9" width="13" height="13" rx="2" {...props} />
-        <Path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" {...props} />
+        <Path
+          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+          {...props}
+        />
       </>
     ),
     camera: (
       <>
-        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" {...props} />
+        <Path
+          d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+          {...props}
+        />
         <Circle cx="12" cy="13" r="4" {...props} />
       </>
     ),
@@ -132,7 +148,10 @@ export const Icon: React.FC<IconProps> = ({
       <>
         <Polyline points="23,4 23,10 17,10" {...props} />
         <Polyline points="1,20 1,14 7,14" {...props} />
-        <Path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" {...props} />
+        <Path
+          d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+          {...props}
+        />
       </>
     ),
     check: <Polyline points="20,6 9,17 4,12" {...props} />,
@@ -193,7 +212,10 @@ export const Icon: React.FC<IconProps> = ({
     ),
     'external-link': (
       <>
-        <Path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" {...props} />
+        <Path
+          d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+          {...props}
+        />
         <Polyline points="15,3 21,3 21,9" {...props} />
         <Line x1="10" y1="14" x2="21" y2="3" {...props} />
       </>
@@ -202,6 +224,12 @@ export const Icon: React.FC<IconProps> = ({
       <>
         <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" {...props} />
         <Path d="M7 11V7a5 5 0 0 1 10 0v4" {...props} />
+      </>
+    ),
+    unlock: (
+      <>
+        <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" {...props} />
+        <Path d="M7 11V7a5 5 0 0 1 9.9-1" {...props} />
       </>
     ),
   };
