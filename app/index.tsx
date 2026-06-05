@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores';
 
 export default function Index() {
   const accessToken = useAuthStore(s => s.accessToken);
+  const vendor = useAuthStore(s => s.vendor);
   const hasHydrated = useAuthStore(s => s._hasHydrated);
 
   if (!hasHydrated) {
@@ -14,7 +15,7 @@ export default function Index() {
     );
   }
 
-  return accessToken
-    ? <Redirect href="/(tabs)" />
-    : <Redirect href="/(auth)/login" />;
+  if (!accessToken) return <Redirect href="/(auth)/login" />;
+  if (!vendor?.isApproved) return <Redirect href="/pending-approval" />;
+  return <Redirect href="/(tabs)" />;
 }

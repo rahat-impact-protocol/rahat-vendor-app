@@ -7,13 +7,17 @@ import { useAuthStore } from '@/stores';
 export default function TabsLayout() {
   const router = useRouter();
   const accessToken = useAuthStore(s => s.accessToken);
+  const vendor = useAuthStore(s => s.vendor);
   const hasHydrated = useAuthStore(s => s._hasHydrated);
 
   useEffect(() => {
-    if (hasHydrated && !accessToken) {
+    if (!hasHydrated) return;
+    if (!accessToken) {
       router.replace('/(auth)/login');
+    } else if (!vendor?.isApproved) {
+      router.replace('/pending-approval');
     }
-  }, [accessToken, hasHydrated]);
+  }, [accessToken, vendor, hasHydrated]);
 
   return (
     <Tabs

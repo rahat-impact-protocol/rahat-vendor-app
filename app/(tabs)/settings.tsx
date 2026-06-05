@@ -12,19 +12,31 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuthStore, useProjectStore, useOrgStore } from '@/stores';
 
+const getProjectName = (): string | null => {
+  try {
+    const raw = localStorage.getItem('rahat-project');
+    const project = JSON.parse(raw ?? '{}');
+
+    return project?.state?.activeProject?.name ?? null;
+  } catch {
+    return null;
+  }
+};
+const project = getProjectName();
+
 // ── Design tokens (mirrors BeneficiariesScreen) ───────────────
-const HERO       = '#1A56DB';
-const HERO_DARK  = '#1344B8';
-const BG         = '#F0F4FA';
-const SURFACE    = '#FFFFFF';
-const BORDER     = '#E5E7EB';
-const BORDER_LT  = '#F3F4F6';
-const TEXT_PRI   = '#111827';
-const TEXT_SEC   = '#6B7280';
+const HERO = '#1A56DB';
+const HERO_DARK = '#1344B8';
+const BG = '#F0F4FA';
+const SURFACE = '#FFFFFF';
+const BORDER = '#E5E7EB';
+const BORDER_LT = '#F3F4F6';
+const TEXT_PRI = '#111827';
+const TEXT_SEC = '#6B7280';
 const TEXT_MUTED = '#9CA3AF';
-const SUCCESS    = '#22C55E';
-const RED        = '#DC2626';
-const RED_BG     = '#FEF2F2';
+const SUCCESS = '#22C55E';
+const RED = '#DC2626';
+const RED_BG = '#FEF2F2';
 const RED_BORDER = '#FEE2E2';
 
 const CURVE_H = 28;
@@ -32,37 +44,51 @@ const CURVE_H = 28;
 // ── Menu items ────────────────────────────────────────────────
 const MENU_ITEMS = [
   {
-    icon: '💎', label: 'Token Redemption',
+    icon: '💎',
+    label: 'Token Redemption',
     sub: 'View and manage redemptions',
     href: '/settings/token-redemption',
-    iconBg: '#EFF6FF', iconColor: HERO,
-    badge: '12 pending', badgeBg: '#EFF6FF', badgeColor: HERO_DARK,
+    iconBg: '#EFF6FF',
+    iconColor: HERO,
+    badge: '12 pending',
+    badgeBg: '#EFF6FF',
+    badgeColor: HERO_DARK,
   },
   {
-    icon: '🗂', label: 'Projects',
+    icon: '🗂',
+    label: 'Projects',
     sub: 'Switch active project',
     href: '/settings/select-project',
-    iconBg: '#F0FDF4', iconColor: '#16A34A',
-    badge: 'Relief Nepal', badgeBg: '#F0FDF4', badgeColor: '#15803D',
+    iconBg: '#F0FDF4',
+    iconColor: '#16A34A',
+    badge: project ?? '—',
+    badgeBg: '#F0FDF4',
+    badgeColor: '#15803D',
   },
   {
-    icon: '⚙️', label: 'Preferences',
+    icon: '⚙️',
+    label: 'Preferences',
     sub: 'App settings & organization',
     href: '/settings/preferences',
-    iconBg: '#F5F3FF', iconColor: '#7C3AED',
+    iconBg: '#F5F3FF',
+    iconColor: '#7C3AED',
     badge: null,
   },
 ];
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const logout = useAuthStore(s => s.logout);
-  const vendor = useAuthStore(s => s.vendor);
-  const resetProjects = useProjectStore(s => s.resetProjects);
-  const resetOrgs = useOrgStore(s => s.resetOrgs);
+  const logout = useAuthStore((s) => s.logout);
+  const vendor = useAuthStore((s) => s.vendor);
+  const resetProjects = useProjectStore((s) => s.resetProjects);
+  const resetOrgs = useOrgStore((s) => s.resetOrgs);
   const [copied, setCopied] = React.useState(false);
 
   const walletAddress = vendor?.walletAddress ?? '—';
+
+  const shortHash = walletAddress
+    ? `${walletAddress.slice(0, 6)}……${walletAddress.slice(-6)}`
+    : '—';
 
   function handleCopy() {
     Clipboard.setString(walletAddress);
@@ -105,7 +131,6 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-
         {/* Profile card */}
         <TouchableOpacity
           style={styles.profileCard}
@@ -131,14 +156,18 @@ export default function SettingsScreen() {
               <View style={styles.walletIconWrap}>
                 <Text style={styles.walletIconText}>💳</Text>
               </View>
-              <Text style={styles.walletAddr} numberOfLines={1}>{walletAddress}</Text>
+              <Text style={styles.walletAddr} numberOfLines={1}>
+                {shortHash}
+              </Text>
             </View>
             <TouchableOpacity
               onPress={handleCopy}
               style={[styles.copyBtn, copied && styles.copyBtnActive]}
               activeOpacity={0.75}
             >
-              <Text style={[styles.copyBtnText, copied && styles.copyBtnTextActive]}>
+              <Text
+                style={[styles.copyBtnText, copied && styles.copyBtnTextActive]}
+              >
                 {copied ? '✓ Copied' : 'Copy'}
               </Text>
             </TouchableOpacity>
@@ -147,28 +176,42 @@ export default function SettingsScreen() {
 
         {/* Menu card */}
         <View style={styles.menuCard}>
-          {MENU_ITEMS.map(({ label, sub, href, iconBg, badge, badgeBg, badgeColor, icon }, i) => (
-            <TouchableOpacity
-              key={label}
-              style={[styles.menuItem, i < MENU_ITEMS.length - 1 && styles.menuItemBorder]}
-              onPress={() => router.push(href)}
-              activeOpacity={0.75}
-            >
-              <View style={[styles.menuIconWrap, { backgroundColor: iconBg }]}>
-                <Text style={styles.menuIconEmoji}>{icon}</Text>
-              </View>
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>{label}</Text>
-                <Text style={styles.menuSub}>{sub}</Text>
-              </View>
-              {badge && (
-                <View style={[styles.menuBadge, { backgroundColor: badgeBg }]}>
-                  <Text style={[styles.menuBadgeText, { color: badgeColor }]}>{badge}</Text>
+          {MENU_ITEMS.map(
+            (
+              { label, sub, href, iconBg, badge, badgeBg, badgeColor, icon },
+              i,
+            ) => (
+              <TouchableOpacity
+                key={label}
+                style={[
+                  styles.menuItem,
+                  i < MENU_ITEMS.length - 1 && styles.menuItemBorder,
+                ]}
+                onPress={() => router.push(href)}
+                activeOpacity={0.75}
+              >
+                <View
+                  style={[styles.menuIconWrap, { backgroundColor: iconBg }]}
+                >
+                  <Text style={styles.menuIconEmoji}>{icon}</Text>
                 </View>
-              )}
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.menuText}>
+                  <Text style={styles.menuLabel}>{label}</Text>
+                  <Text style={styles.menuSub}>{sub}</Text>
+                </View>
+                {badge && (
+                  <View
+                    style={[styles.menuBadge, { backgroundColor: badgeBg }]}
+                  >
+                    <Text style={[styles.menuBadgeText, { color: badgeColor }]}>
+                      {badge}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.chevron}>›</Text>
+              </TouchableOpacity>
+            ),
+          )}
         </View>
 
         {/* App info card */}
@@ -200,7 +243,6 @@ export default function SettingsScreen() {
           </View>
           <Text style={[styles.chevron, { color: '#F87171' }]}>›</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -219,18 +261,30 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   circle1: {
-    position: 'absolute', right: -20, top: -20,
-    width: 120, height: 120, borderRadius: 60,
+    position: 'absolute',
+    right: -20,
+    top: -20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   circle2: {
-    position: 'absolute', right: 55, top: 25,
-    width: 70, height: 70, borderRadius: 35,
+    position: 'absolute',
+    right: 55,
+    top: 25,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   circle3: {
-    position: 'absolute', left: -30, bottom: 40,
-    width: 90, height: 90, borderRadius: 45,
+    position: 'absolute',
+    left: -30,
+    bottom: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   titleRow: {
@@ -239,12 +293,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 22,
   },
-  heroTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 3 },
-  heroSub:   { color: 'rgba(255,255,255,0.65)', fontSize: 13 },
+  heroTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  heroSub: { color: 'rgba(255,255,255,0.65)', fontSize: 13 },
   notifBtn: {
-    width: 38, height: 38, borderRadius: 19,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   notifIcon: { fontSize: 17 },
   curveNotch: {
@@ -253,9 +315,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginHorizontal: -20,
-     overflow: "hidden",
-    position: "relative",
-     paddingHorizontal: 20,
+    overflow: 'hidden',
+    position: 'relative',
+    paddingHorizontal: 20,
     paddingBottom: 36,
   },
   // ── Scroll / content ──────────────────────────────────────────
@@ -269,52 +331,88 @@ const styles = StyleSheet.create({
 
   // ── Profile card ──────────────────────────────────────────────
   profileCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: SURFACE, borderRadius: 16,
-    borderWidth: 1, borderColor: BORDER_LT, padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BORDER_LT,
+    padding: 16,
   },
   avatarWrap: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#EFF6FF',
-    alignItems: 'center', justifyContent: 'center',
-    position: 'relative', flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    flexShrink: 0,
   },
   avatarText: { fontWeight: '700', fontSize: 16, color: HERO },
   onlineDot: {
-    position: 'absolute', bottom: 1, right: 1,
-    width: 12, height: 12, borderRadius: 6,
-    backgroundColor: SUCCESS, borderWidth: 2, borderColor: SURFACE,
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: SUCCESS,
+    borderWidth: 2,
+    borderColor: SURFACE,
   },
   profileInfo: { flex: 1 },
-  profileName: { fontWeight: '700', fontSize: 15, color: TEXT_PRI, marginBottom: 2 },
+  profileName: {
+    fontWeight: '700',
+    fontSize: 15,
+    color: TEXT_PRI,
+    marginBottom: 2,
+  },
   profileRole: { fontSize: 12, color: TEXT_MUTED },
   chevron: { fontSize: 22, color: TEXT_MUTED, lineHeight: 22 },
 
   // ── Wallet card ───────────────────────────────────────────────
   walletCard: {
-    backgroundColor: SURFACE, borderRadius: 16,
-    borderWidth: 1, borderColor: BORDER_LT, padding: 14,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BORDER_LT,
+    padding: 14,
     paddingHorizontal: 16,
   },
   walletLabel: {
-    fontSize: 10, fontWeight: '700', color: TEXT_MUTED,
-    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+    fontSize: 10,
+    fontWeight: '700',
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   walletRow: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', gap: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   walletLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   walletIconWrap: {
-    width: 32, height: 32, borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: '#EFF6FF',
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   walletIconText: { fontSize: 15 },
   walletAddr: { fontSize: 13, fontWeight: '500', color: TEXT_PRI, flex: 1 },
   copyBtn: {
-    backgroundColor: '#F3F4F6', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 6, flexShrink: 0,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexShrink: 0,
   },
   copyBtnActive: { backgroundColor: '#D1FAE5' },
   copyBtnText: { fontSize: 12, fontWeight: '600', color: TEXT_SEC },
@@ -322,50 +420,81 @@ const styles = StyleSheet.create({
 
   // ── Menu card ─────────────────────────────────────────────────
   menuCard: {
-    backgroundColor: SURFACE, borderRadius: 16,
-    borderWidth: 1, borderColor: BORDER_LT, overflow: 'hidden',
+    backgroundColor: SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BORDER_LT,
+    overflow: 'hidden',
   },
   menuItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingHorizontal: 16, paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   menuItemBorder: { borderBottomWidth: 1, borderBottomColor: BORDER_LT },
   menuIconWrap: {
-    width: 36, height: 36, borderRadius: 9,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   menuIconEmoji: { fontSize: 16 },
   menuText: { flex: 1 },
-  menuLabel: { fontWeight: '600', fontSize: 13, color: TEXT_PRI, marginBottom: 2 },
-  menuSub:   { fontSize: 11, color: TEXT_MUTED },
+  menuLabel: {
+    fontWeight: '600',
+    fontSize: 13,
+    color: TEXT_PRI,
+    marginBottom: 2,
+  },
+  menuSub: { fontSize: 11, color: TEXT_MUTED },
   menuBadge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   menuBadgeText: { fontSize: 11, fontWeight: '700' },
 
   // ── Info card ─────────────────────────────────────────────────
   infoCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: SURFACE, borderRadius: 16,
-    borderWidth: 1, borderColor: BORDER_LT,
-    paddingHorizontal: 16, paddingVertical: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BORDER_LT,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
   },
   latestBadge: {
-    backgroundColor: '#FEF3C7', borderRadius: 20,
-    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   latestBadgeText: { fontSize: 11, fontWeight: '700', color: '#92400E' },
 
   // ── Logout card ───────────────────────────────────────────────
   logoutCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: SURFACE, borderRadius: 16,
-    borderWidth: 1, borderColor: RED_BORDER,
-    paddingHorizontal: 16, paddingVertical: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: RED_BORDER,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
   },
   logoutIconWrap: {
-    width: 36, height: 36, borderRadius: 9,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     backgroundColor: RED_BG,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   logoutLabel: { fontWeight: '600', fontSize: 13, color: RED, marginBottom: 2 },
-  logoutSub:   { fontSize: 11, color: '#F87171' },
+  logoutSub: { fontSize: 11, color: '#F87171' },
 });
