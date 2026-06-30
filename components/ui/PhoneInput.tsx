@@ -65,6 +65,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   const [search, setSearch] = React.useState('');
   const [country, setCountry] = React.useState<CountryOption>(initial);
   const [digits, setDigits] = React.useState('');
+  const [focused, setFocused] = React.useState(false);
 
   const filtered = React.useMemo(() => {
     if (!search.trim()) return ALL_COUNTRIES;
@@ -90,7 +91,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   return (
     <View>
       {/* ── Input row ── */}
-      <View style={[s.row, error ? s.rowError : null]}>
+      <View style={[s.row, focused && s.rowFocused, error ? s.rowError : null]}>
         <TouchableOpacity
           style={[s.dialBtn, open && s.dialBtnActive]}
           onPress={() => {
@@ -105,13 +106,18 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         </TouchableOpacity>
 
         <TextInput
-          style={s.input}
+          style={[s.input, { outlineStyle: 'none' } as any]}
           value={digits}
           onChangeText={handleDigits}
           placeholder={placeholder}
           placeholderTextColor="#9CA3AF"
           keyboardType="phone-pad"
-          onFocus={() => open && setOpen(false)}
+          // onFocus={() => open && setOpen(false)}
+          onFocus={() => {
+            setFocused(true);
+            if (open) setOpen(false);
+          }}
+          onBlur={() => setFocused(false)}
         />
       </View>
 
@@ -119,7 +125,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       {open && (
         <View style={s.dropdown}>
           <TextInput
-            style={s.searchInput}
+            style={[s.searchInput, { outlineStyle: 'none' } as any]}
             value={search}
             onChangeText={setSearch}
             placeholder="Search country or code…"
@@ -135,10 +141,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[
-                  s.option,
-                  item.code === country.code && s.optionActive,
-                ]}
+                style={[s.option, item.code === country.code && s.optionActive]}
                 onPress={() => selectCountry(item)}
                 activeOpacity={0.7}
               >
@@ -147,9 +150,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                   {item.name}
                 </Text>
                 <Text style={s.optionDial}>{item.dialCode}</Text>
-                {item.code === country.code && (
-                  <Text style={s.check}>✓</Text>
-                )}
+                {item.code === country.code && <Text style={s.check}>✓</Text>}
               </TouchableOpacity>
             )}
           />
@@ -168,6 +169,14 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
+  },
+  rowFocused: {
+    borderColor: '#1A56DB',
+    shadowColor: '#1A56DB',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
   },
   rowError: {
     borderColor: '#DC2626',
