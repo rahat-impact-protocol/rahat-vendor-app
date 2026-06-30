@@ -43,17 +43,17 @@ const CURVE_H = 28;
 
 // ── Menu items ────────────────────────────────────────────────
 const MENU_ITEMS = [
-  {
-    icon: '💎',
-    label: 'Token Redemption',
-    sub: 'View and manage redemptions',
-    href: '/settings/token-redemption',
-    iconBg: '#EFF6FF',
-    iconColor: HERO,
-    badge: '12 pending',
-    badgeBg: '#EFF6FF',
-    badgeColor: HERO_DARK,
-  },
+  // {
+  //   icon: '💎',
+  //   label: 'Token Redemption',
+  //   sub: 'View and manage redemptions',
+  //   href: '/settings/token-redemption',
+  //   iconBg: '#EFF6FF',
+  //   iconColor: HERO,
+  //   badge: '12 pending',
+  //   badgeBg: '#EFF6FF',
+  //   badgeColor: HERO_DARK,
+  // },
   {
     icon: '🗂',
     label: 'Projects',
@@ -65,15 +65,15 @@ const MENU_ITEMS = [
     badgeBg: '#F0FDF4',
     badgeColor: '#15803D',
   },
-  {
-    icon: '⚙️',
-    label: 'Preferences',
-    sub: 'App settings & organization',
-    href: '/settings/preferences',
-    iconBg: '#F5F3FF',
-    iconColor: '#7C3AED',
-    badge: null,
-  },
+  // {
+  //   icon: '⚙️',
+  //   label: 'Preferences',
+  //   sub: 'App settings & organization',
+  //   href: '/settings/preferences',
+  //   iconBg: '#F5F3FF',
+  //   iconColor: '#7C3AED',
+  //   badge: null,
+  // },
 ];
 
 export default function SettingsScreen() {

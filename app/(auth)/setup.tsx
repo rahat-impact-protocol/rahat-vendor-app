@@ -72,6 +72,9 @@ export default function SetupScreen() {
     {},
   );
 
+  const [focused, setFocused] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
   // Guard: redirect to login if arrived here without a google user
   React.useEffect(() => {
     if (!googleUser) {
@@ -326,12 +329,22 @@ export default function SetupScreen() {
                 Full Name <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={[styles.input, errors.name ? styles.inputError : null]}
+                style={[
+                  styles.input,
+                  focused && styles.rowFocused,
+                  { outlineStyle: 'none' } as any,
+                  errors.name ? styles.inputError : null,
+                ]}
                 value={name}
                 onChangeText={(v) => {
                   setName(v);
                   setErrors((e) => ({ ...e, name: undefined }));
                 }}
+                onFocus={() => {
+                  setFocused(true); // ← add
+                  if (open) setOpen(false);
+                }}
+                onBlur={() => setFocused(false)}
                 placeholder="Your full name"
                 placeholderTextColor="#B0B0B0"
                 autoCapitalize="words"
@@ -553,15 +566,27 @@ const styles = StyleSheet.create({
     padding: 32,
     gap: 12,
   },
+  rowFocused: {
+    borderColor: '#1A56DB',
+    shadowColor: '#1A56DB',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
+  },
   input: {
     flex: 1,
     backgroundColor: 'transparent',
+    borderColor: '#E5E7EB',
+    borderRadius: 9,
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontFamily: 'Manrope',
+    borderWidth: 1.5,
     fontSize: 14,
-    color: '#1F242A',
+    color: '#111827',
   },
+
   centeredCard: {
     alignItems: 'center',
     marginTop: 16,

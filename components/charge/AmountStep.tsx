@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-} from "react-native";
-import { Button } from "@/components/ui/Button";
-import { Icon } from "@/components/ui/Icon";
+} from 'react-native';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import {
   PURPLE,
   PURPLE_LIGHT,
@@ -22,9 +22,9 @@ import {
   SURFACE,
   BG_LIGHT,
   ERROR_COLOR,
-} from "./constants";
-import { shared } from "./styles";
-import { SecureFooter } from "./SecureFooter";
+} from './constants';
+import { shared } from './styles';
+import { SecureFooter } from './SecureFooter';
 
 type Props = {
   amount: string;
@@ -46,132 +46,156 @@ export const AmountStep: React.FC<Props> = ({
   loading,
   handleCreateClaim,
   onBack,
-}) => (
-  <View style={shared.whiteSheet}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={shared.scrollPad}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+}) => {
+  const [focused, setFocused] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <View style={shared.whiteSheet}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text style={shared.stepTitle}>Enter Redeem Amount</Text>
+        <ScrollView
+          contentContainerStyle={shared.scrollPad}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={shared.stepTitle}>Enter Redeem Amount</Text>
 
-        <View style={s.tokenBanner}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.tokenBannerLabel}>AVAILABLE TOKENS</Text>
-            <Text style={s.tokenBannerValue}>
-              {availableTokens}{" "}
-              <Text style={s.tokenBannerUnit}>Tokens</Text>
-            </Text>
+          <View style={s.tokenBanner}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.tokenBannerLabel}>AVAILABLE TOKENS</Text>
+              <Text style={s.tokenBannerValue}>
+                {availableTokens} <Text style={s.tokenBannerUnit}>Tokens</Text>
+              </Text>
+            </View>
+            <View style={s.tokenBannerIcon}>
+              <Icon name="zap" size={22} color={PURPLE} />
+            </View>
           </View>
-          <View style={s.tokenBannerIcon}>
-            <Icon name="zap" size={22} color={PURPLE} />
-          </View>
-        </View>
 
-        <Text style={shared.fieldLabel}>REDEEM AMOUNT</Text>
-        <View style={[s.amountRow, amountError ? s.amountRowError : null]}>
-          <TextInput
-            value={amount}
-            onChangeText={(v) => {
-              setAmount(v.replace(/[^0-9]/g, ""));
-              setAmountError("");
-            }}
-            placeholder="Enter token amount"
-            keyboardType="number-pad"
-            style={s.amountInput}
-            placeholderTextColor={TEXT_MUTED}
-          />
-          <View style={s.amountUnit}>
-            <Text style={s.amountUnitText}>Tokens</Text>
-          </View>
-        </View>
-        {amountError ? (
-          <Text style={shared.fieldError}>{amountError}</Text>
-        ) : null}
-
-        <View style={s.chipsRow}>
-          {[100, 500, 1000, 5000].map((v) => {
-            const disabled = v > availableTokens;
-            return (
-              <TouchableOpacity
-                key={v}
-                style={[s.chip, disabled ? s.chipDisabled : null]}
-                onPress={() => {
-                  if (!disabled) {
-                    setAmount(String(v));
-                    setAmountError("");
-                  }
-                }}
-                disabled={disabled}
-              >
-                <Text
-                  style={[s.chipText, disabled ? s.chipTextDisabled : null]}
-                >
-                  {v}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-          <TouchableOpacity
-            style={s.chip}
-            onPress={() => {
-              setAmount(String(availableTokens));
-              setAmountError("");
-            }}
+          <Text style={shared.fieldLabel}>REDEEM AMOUNT</Text>
+          <View
+            style={[
+              s.amountRow,
+              focused && s.rowFocused,
+              { outlineStyle: 'none' } as any,
+              amountError ? s.amountRowError : null,
+            ]}
           >
-            <Text style={s.chipText}>Max</Text>
-          </TouchableOpacity>
-        </View>
+            <TextInput
+              value={amount}
+              onChangeText={(v) => {
+                setAmount(v.replace(/[^0-9]/g, ''));
+                setAmountError('');
+              }}
+              placeholder="Enter token amount"
+              keyboardType="number-pad"
+              style={[s.amountInput, { outlineStyle: 'none' } as any]}
+              placeholderTextColor={TEXT_MUTED}
+              onFocus={() => {
+                setFocused(true);
+                if (open) setOpen(false);
+              }}
+              onBlur={() => setFocused(false)}
+            />
+            <View style={s.amountUnit}>
+              <Text style={s.amountUnitText}>Tokens</Text>
+            </View>
+          </View>
+          {amountError ? (
+            <Text style={shared.fieldError}>{amountError}</Text>
+          ) : null}
 
-        <Button
-          label="Create Claim"
-          icon="zap"
-          onPress={handleCreateClaim}
-          loading={loading}
-        />
-        <TouchableOpacity onPress={onBack} style={shared.cancelBtn}>
-          <Text style={shared.cancelText}>← Back</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
-    <SecureFooter />
-  </View>
-);
+          <View style={s.chipsRow}>
+            {[100, 500, 1000, 5000].map((v) => {
+              const disabled = v > availableTokens;
+              return (
+                <TouchableOpacity
+                  key={v}
+                  style={[s.chip, disabled ? s.chipDisabled : null]}
+                  onPress={() => {
+                    if (!disabled) {
+                      setAmount(String(v));
+                      setAmountError('');
+                    }
+                  }}
+                  disabled={disabled}
+                >
+                  <Text
+                    style={[s.chipText, disabled ? s.chipTextDisabled : null]}
+                  >
+                    {v}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              style={s.chip}
+              onPress={() => {
+                setAmount(String(availableTokens));
+                setAmountError('');
+              }}
+            >
+              <Text style={s.chipText}>Max</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Button
+            label="Create Claim"
+            icon="zap"
+            onPress={handleCreateClaim}
+            loading={loading}
+          />
+          <TouchableOpacity onPress={onBack} style={shared.cancelBtn}>
+            <Text style={shared.cancelText}>← Back</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <SecureFooter />
+    </View>
+  );
+};
 
 const s = StyleSheet.create({
   tokenBanner: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: PURPLE_MID,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E9DCFF",
+    borderColor: '#E9DCFF',
     padding: 16,
     marginBottom: 20,
   },
+  rowFocused: {
+    borderColor: '#1A56DB',
+    shadowColor: '#1A56DB',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
+  },
   tokenBannerLabel: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: '700',
     color: TEXT_MUTED,
     letterSpacing: 0.8,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     marginBottom: 4,
   },
   tokenBannerValue: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: '800',
     color: PURPLE,
   },
   tokenBannerUnit: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
     color: TEXT_SECONDARY,
   },
   tokenBannerIcon: {
@@ -179,26 +203,26 @@ const s = StyleSheet.create({
     height: 44,
     borderRadius: 10,
     backgroundColor: PURPLE_LIGHT,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   amountRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderWidth: 1.5,
     borderColor: BORDER_COLOR,
     borderRadius: 10,
-    overflow: "hidden",
+    overflow: 'hidden',
     backgroundColor: SURFACE,
-    alignItems: "center",
+    alignItems: 'center',
   },
   amountRowError: { borderColor: ERROR_COLOR },
   amountInput: {
     flex: 1,
     height: 50,
     paddingHorizontal: 14,
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     color: TEXT_PRIMARY,
   },
   amountUnit: {
@@ -209,17 +233,17 @@ const s = StyleSheet.create({
     backgroundColor: BG_LIGHT,
   },
   amountUnitText: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: '600',
     color: TEXT_SECONDARY,
   },
   chipsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
     marginTop: 12,
     marginBottom: 20,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
   },
   chip: {
     paddingHorizontal: 16,
@@ -227,13 +251,13 @@ const s = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: PURPLE_LIGHT,
     borderWidth: 1,
-    borderColor: "#C4B5FD",
+    borderColor: '#C4B5FD',
   },
   chipDisabled: { backgroundColor: BG_LIGHT, borderColor: BORDER_COLOR },
   chipText: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: '700',
     color: PURPLE,
   },
   chipTextDisabled: { color: TEXT_MUTED },
