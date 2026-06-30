@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon } from "@/components/ui/Icon";
-import { TransactionCard } from "@/components/ui/TransactionCard";
-import { useAuthStore, useProjectStore, useOrgStore } from "@/stores";
-import { getVendorOnChainBalance } from "@/utils/contractBalance";
-import { transactionService } from "@/services";
-import type { Transaction } from "@/types";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon } from '@/components/ui/Icon';
+import { TransactionCard } from '@/components/ui/TransactionCard';
+import { useAuthStore, useProjectStore } from '@/stores';
+import { getVendorOnChainBalance } from '@/utils/contractBalance';
+import { transactionService } from '@/services';
+import type { Transaction } from '@/types';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const vendor = useAuthStore((s) => s.vendor);
   const token = useAuthStore((s) => s.accessToken);
   const project = useProjectStore((s) => s.activeProject);
-  const org = useOrgStore((s) => s.activeOrg);
+  // const org = useOrgStore((s) => s.activeOrg);
 
   // Adjust this import path to your actual types file
 
@@ -37,7 +37,7 @@ export default function HomeScreen() {
           await transactionService.getTransaction(
             project.baseUrl,
             vendor.walletAddress,
-            token ?? "",
+            token ?? '',
             1,
             5,
           );
@@ -50,18 +50,18 @@ export default function HomeScreen() {
           actionType: tx.actionType,
           status: tx.status,
           date: new Date(tx.createdAt).toLocaleString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
           }),
         }));
 
         // @ts-ignore (If state hook type hasn't been re-typed to any[] or Transaction[])
         setTransactionHistory(mappedTransactions);
       } catch (error) {
-        console.error("Failed to fetch transactions:", error);
+        console.error('Failed to fetch transactions:', error);
         setTransactionHistory([]);
       }
     };
@@ -78,7 +78,7 @@ export default function HomeScreen() {
       const bal = await getVendorOnChainBalance(vendor.walletAddress);
       setVendorBalance(bal);
     } catch (e) {
-      console.error("Failed to fetch on-chain balance:", e);
+      console.error('Failed to fetch on-chain balance:', e);
       setVendorBalance(null);
     } finally {
       setBalanceLoading(false);
@@ -103,13 +103,13 @@ export default function HomeScreen() {
 
   const greeting = (() => {
     const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 18) return "Good afternoon";
-    return "Good evening";
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
   })();
 
-  const firstName = vendor?.name?.split(" ")[0] ?? "Vendor";
-  const lastName = vendor?.name?.split(" ")[1] ?? "";
+  const firstName = vendor?.name?.split(' ')[0] ?? 'Vendor';
+  const lastName = vendor?.name?.split(' ')[1] ?? '';
 
   return (
     <View style={styles.screen}>
@@ -129,31 +129,31 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.topRowRight}>
-              <View style={styles.iconBtn}>
+              {/* <View style={styles.iconBtn}>
                 <Icon name="bell" size={18} color="#fff" strokeWidth={1.75} />
                 <View style={styles.bellDot} />
-              </View>
+              </View> */}
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/settings")}
+                onPress={() => router.push('/(tabs)/settings')}
                 style={styles.avatarBtn}
                 activeOpacity={0.8}
               >
                 <Text style={styles.avatarInitials}>
-                  {vendor?.initials ?? "AL"}
+                  {vendor?.initials ?? 'U'}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
           <View style={styles.breadcrumb}>
-            <View style={styles.orgChip}>
+            {/* <View style={styles.orgChip}>
               <Text style={styles.orgInitials}>{org?.initials ?? "RF"}</Text>
             </View>
             <Text style={styles.orgName}>
               {org?.name ?? "Rahat Foundation"}
-            </Text>
-            <Text style={styles.breadcrumbSep}>{" › "}</Text>
+            </Text> */}
+            {/* <Text style={styles.breadcrumbSep}>{' › '}</Text> */}
             <Text style={styles.projectName}>
-              {project?.name ?? "Winter Relief 2026"}
+              {project?.name ?? 'No Project Selected'}
             </Text>
           </View>
           <Text style={styles.balanceLabel}>Rahat Balance</Text>
@@ -169,7 +169,7 @@ export default function HomeScreen() {
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={styles.quickActionCard}
-              onPress={() => router.push("/(tabs)/charge")}
+              onPress={() => router.push('/(tabs)/charge')}
               activeOpacity={0.8}
             >
               <View style={styles.quickActionIconWrap}>
@@ -179,7 +179,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionCard}
-              onPress={() => router.push("/(tabs)/beneficiaries")}
+              onPress={() => router.push('/(tabs)/beneficiaries')}
               activeOpacity={0.8}
             >
               <View style={styles.quickActionIconWrap}>
@@ -189,7 +189,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionCard}
-              onPress={() => router.push("/transactions" as any)}
+              onPress={() => router.push('/transactions' as any)}
               activeOpacity={0.8}
             >
               <View style={styles.quickActionIconWrap}>
@@ -205,7 +205,7 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Transactions</Text>
             <TouchableOpacity
-              onPress={() => router.push("/transactions" as any)}
+              onPress={() => router.push('/transactions' as any)}
               style={styles.seeAllBtn}
               activeOpacity={0.7}
             >
@@ -223,73 +223,73 @@ export default function HomeScreen() {
   );
 }
 
-const HERO_COLOR = "#1A56DB"; //7461D6";
+const HERO_COLOR = '#1A56DB'; //7461D6";
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F7F9FC" }, //#1A56DB
+  screen: { flex: 1, backgroundColor: '#F7F9FC' }, //#1A56DB
   hero: {
     backgroundColor: HERO_COLOR,
     paddingHorizontal: 20,
     paddingBottom: 36,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
-    overflow: "hidden",
-    position: "relative",
+    overflow: 'hidden',
+    position: 'relative',
   },
   heroCircle1: {
-    position: "absolute",
+    position: 'absolute',
     right: -30,
     top: -30,
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   heroCircle2: {
-    position: "absolute",
+    position: 'absolute',
     right: 50,
     top: 20,
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   topRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     marginBottom: 18,
   },
   greeting: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 13,
-    color: "rgba(255,255,255,0.75)",
+    color: 'rgba(255,255,255,0.75)',
     marginBottom: 2,
   },
   vendorName: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 18,
-    color: "#fff",
+    color: '#fff',
   },
-  topRowRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  topRowRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   iconBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
   bellDot: {
-    position: "absolute",
+    position: 'absolute',
     top: 8,
     right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EF4444",
+    backgroundColor: '#EF4444',
     borderWidth: 1.5,
     borderColor: HERO_COLOR,
   },
@@ -297,21 +297,21 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarInitials: {
-    fontFamily: "Manrope",
-    fontWeight: "800",
+    fontFamily: 'Manrope',
+    fontWeight: '800',
     fontSize: 13,
-    color: "#fff",
+    color: '#fff',
   },
   breadcrumb: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
     marginBottom: 18,
   },
@@ -319,130 +319,130 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   orgInitials: {
-    fontFamily: "Manrope",
-    fontWeight: "800",
+    fontFamily: 'Manrope',
+    fontWeight: '800',
     fontSize: 10,
-    color: "#fff",
+    color: '#fff',
   },
   orgName: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: 'rgba(255,255,255,0.8)',
   },
   breadcrumbSep: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    color: "rgba(255,255,255,0.4)",
+    color: 'rgba(255,255,255,0.4)',
   },
   projectName: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.9)",
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
   },
   balanceLabel: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    color: "rgba(255,255,255,0.65)",
+    color: 'rgba(255,255,255,0.65)',
     marginBottom: 6,
   },
   balanceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   balanceAmount: {
-    fontFamily: "Manrope",
-    fontWeight: "800",
+    fontFamily: 'Manrope',
+    fontWeight: '800',
     fontSize: 44,
-    color: "#fff",
+    color: '#fff',
     letterSpacing: -1,
     lineHeight: 48,
   },
   balanceTextGroup: {
-    flexDirection: "row",
-    alignItems: "flex-end",
+    flexDirection: 'row',
+    alignItems: 'flex-end',
   },
   balanceUnit: {
-    fontFamily: "Manrope",
-    fontWeight: "600",
+    fontFamily: 'Manrope',
+    fontWeight: '600',
     fontSize: 16,
-    color: "rgba(255,255,255,0.75)",
+    color: 'rgba(255,255,255,0.75)',
     marginBottom: 6,
     marginLeft: 4,
   },
   switchProjectBtn: {
     // alignSelf: 'flex-start',
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     //"rgba(255,255,255,0.18)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+    borderColor: 'rgba(255,255,255,0.25)',
     borderRadius: 22,
     paddingVertical: 7,
     paddingHorizontal: 14,
     // marginBottom: 24,
   },
   switchProjectText: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 13,
-    fontWeight: "500",
-    color: "#7E00D1",
+    fontWeight: '500',
+    color: '#7E00D1',
   },
   quickActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
     marginBottom: 4,
   },
   quickActionCard: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingVertical: 16,
-    alignItems: "center",
+    alignItems: 'center',
     gap: 8,
   },
   quickActionIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quickActionLabel: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 12,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: '600',
+    color: '#fff',
   },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 32 },
   section: { padding: 20, paddingTop: 24 },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
   },
   sectionTitle: {
-    fontFamily: "Manrope",
-    fontWeight: "700",
+    fontFamily: 'Manrope',
+    fontWeight: '700',
     fontSize: 16,
-    color: "#1F242A",
+    color: '#1F242A',
   },
   seeAllBtn: { paddingVertical: 2 },
   seeAllText: {
-    fontFamily: "Manrope",
+    fontFamily: 'Manrope',
     fontSize: 13,
     color: HERO_COLOR,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   txList: { gap: 10 },
 });
