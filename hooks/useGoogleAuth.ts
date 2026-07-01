@@ -60,7 +60,7 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
     } else if (response?.type === 'dismiss' || response?.type === 'cancel') {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   const fetchGoogleUser = async (token: string) => {
@@ -82,7 +82,8 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
       setError(null);
       onSuccess(user);
     } catch (err) {
-      const e = err instanceof Error ? err : new Error('Failed to fetch user info');
+      const e =
+        err instanceof Error ? err : new Error('Failed to fetch user info');
       setError(e.message);
       onError?.(e);
     } finally {
@@ -132,7 +133,11 @@ export function useGoogleAuth({ onSuccess, onError }: UseGoogleAuthOptions) {
         return gFile.updateFile(existingFile.firstFile!.id, backupData);
       }
 
-      return gFile.createFile({ name: FILE_NAME, data: backupData, parentId: folder.id });
+      return gFile.createFile({
+        name: FILE_NAME,
+        data: backupData,
+        parentId: folder.id,
+      });
     },
   });
 
